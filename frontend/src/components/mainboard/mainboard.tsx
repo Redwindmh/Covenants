@@ -4,7 +4,7 @@ const MainBoard = () => {
   return (
     <div className="w-3/7">
       <h1 className="text-red-500">Covenants</h1>
-      <img src={mainboard} alt="board" className="h-full w-auto" />
+      <img src={mainboard} alt="board" className="h-5/6 w-auto" />
     </div>
   )
 }
