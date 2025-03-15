@@ -1,14 +1,16 @@
 import { useRef } from "react";
 import { storm } from "../../assets/images/pieces/index.ts"
 
+// Create catch to prevent user from placing pieces outside of designated areas on board an maybe stacjing on same spot? Or, maybe add some special feature for when pieces are stacked?
+
 const MainBoard = () => {
   const matrixSize: number[] = [16, 16];
   const matrix: number[] = [];
   for (let i = 0; i < matrixSize[0]; i++) { matrix.push(i) }
 
-  const dragOverItem = useRef()
+  const dragOverItem: any = useRef()
 
-  const dragOver = (e: object) => {
+  const dragOver = (e: DragEvent<HTMLDivElement> & { currentTarget: HTMLDivElement }) => {
     e.stopPropagation()
     e.preventDefault()
     e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.4)"
@@ -16,24 +18,22 @@ const MainBoard = () => {
     dragOverItem.current = e.currentTarget.id
   }
 
-  const dragLeave = (e: object) => {
+  const dragLeave = (e: DragEvent<HTMLDivElement> & { currentTarget: HTMLDivElement }) => {
     e.currentTarget.style.backgroundColor = "rgba(0,0,0,0)"
     console.log(`Dragging over ${e.currentTarget.id}`)
     dragOverItem.current = e.currentTarget.id
   }
 
-  const drop = (e: object) => {
+  const drop = (e: DragEvent<HTMLDivElement> & { currentTarget: HTMLDivElement }) => {
     e.stopPropagation()
     e.preventDefault()
     e.currentTarget.style.backgroundColor = "rgba(0,0,0,0)"
     console.log(storm)
-    let droppedPiece: object = document.createElement("img")
+    let droppedPiece: HTMLImageElement = document.createElement("img")
     droppedPiece.src = storm
     e.currentTarget.append(droppedPiece)
     console.log(`You have dropped ${matrix} on ${e.currentTarget.id}`)
   }
-
-
 
   return (
     <>

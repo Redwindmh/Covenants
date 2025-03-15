@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"
+import { useRef } from "react"
 import { storm, water, fire, ice, wind, unknown, tree_coin, eye_coin } from "../../assets/images/pieces/index.ts"
 
 const ReadyPlayerOne = () => {
@@ -6,18 +6,18 @@ const ReadyPlayerOne = () => {
   const coins: string[] = [tree_coin, eye_coin]
   const playerStones: string[] = []
   const playerCoin: string = coins[0]
-  const dragItem = useRef()
+  const dragItem: any = useRef()
   for (let i = 0; i < 7; i++) {
     playerStones.push(stones[Math.floor(Math.random() * 6)])
   }
 
-  const dragStart = (e: object) => {
+  const dragStart = (e: Event & { target: HTMLImageElement }) => {
     console.log(`We be dragging ${e.target.id}`)
     dragItem.current = e.target.id
   }
 
-  const dragEnd = (e: object) => {
-    e.stopPropogation()
+  const dragEnd = (e: Event & { target: HTMLImageElement }) => {
+    e.stopPropagation()
     e.preventDefault()
     console.log(`Dropping ${e.target.id}`)
     dragItem.current = e.target.id
