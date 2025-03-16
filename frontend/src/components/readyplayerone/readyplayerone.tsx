@@ -11,12 +11,12 @@ const ReadyPlayerOne = () => {
     playerStones.push(stones[Math.floor(Math.random() * 6)])
   }
 
-  const dragStart = (e: Event & { target: HTMLImageElement }) => {
+  const dragStart = (e: any & { target: HTMLImageElement }) => {
     console.log(`We be dragging ${e.target.id}`)
     dragItem.current = e.target.id
   }
 
-  const dragEnd = (e: Event & { target: HTMLImageElement }) => {
+  const dragEnd = (e: any & { target: HTMLImageElement }) => {
     e.stopPropagation()
     e.preventDefault()
     console.log(`Dropping ${e.target.id}`)

@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { storm } from "../../assets/images/pieces/index.ts"
 
-// Create catch to prevent user from placing pieces outside of designated areas on board an maybe stacjing on same spot? Or, maybe add some special feature for when pieces are stacked?
+// ts-nocheck Create catch to prevent user from placing pieces outside of designated areas on board an maybe stacjing on same spot? Or, maybe add some special feature for when pieces are stacked?
 
 const MainBoard = () => {
   const matrixSize: number[] = [16, 16];
@@ -10,7 +10,7 @@ const MainBoard = () => {
 
   const dragOverItem: any = useRef()
 
-  const dragOver = (e: DragEvent<HTMLDivElement> & { currentTarget: HTMLDivElement }) => {
+  const dragOver = (e: any & { currentTarget: HTMLDivElement }) => {
     e.stopPropagation()
     e.preventDefault()
     e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.4)"
@@ -18,13 +18,13 @@ const MainBoard = () => {
     dragOverItem.current = e.currentTarget.id
   }
 
-  const dragLeave = (e: DragEvent<HTMLDivElement> & { currentTarget: HTMLDivElement }) => {
+  const dragLeave = (e: any & { currentTarget: HTMLDivElement }) => {
     e.currentTarget.style.backgroundColor = "rgba(0,0,0,0)"
     console.log(`Dragging over ${e.currentTarget.id}`)
     dragOverItem.current = e.currentTarget.id
   }
 
-  const drop = (e: DragEvent<HTMLDivElement> & { currentTarget: HTMLDivElement }) => {
+  const drop = (e: any & { currentTarget: HTMLDivElement }) => {
     e.stopPropagation()
     e.preventDefault()
     e.currentTarget.style.backgroundColor = "rgba(0,0,0,0)"
