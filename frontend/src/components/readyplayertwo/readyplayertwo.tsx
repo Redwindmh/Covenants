@@ -1,25 +1,33 @@
-import { storm, water, fire, ice, wind, unknown, tree_coin, eye_coin } from "../../assets/images/pieces/index.ts"
+import { useRef } from "react"
+import { useGameState } from "../../state/gameState"
 
 const ReadyPlayerTwo = () => {
-  const stones: string[] = [storm, water, fire, ice, wind, unknown]
-  const coins: string[] = [tree_coin, eye_coin]
-  const playerStones: string[] = []
-  const playerCoin: string = coins[1]
+  const dragItem = useRef<string>("")
+  const { playerTwoInventory } = useGameState()
 
-  for (let i = 0; i < 7; i++) {
-    playerStones.push(stones[Math.floor(Math.random() * 6)])
+  const dragStart = (e: React.DragEvent<HTMLImageElement>) => {
+    dragItem.current = e.currentTarget.id
+    e.dataTransfer.setData("text/plain", e.currentTarget.id)
   }
 
   return (
-    <div className="w-2/7">
-      <h2 className="text-red-500">Player Two</h2>
-      <div className="grid grid-cols-3 gap-3 justify-items-center items-center">
-        {playerStones.map((stone) => {
-          return (<img className="h-3/4 w-auto" draggable src={stone} alt="pieces" />)
+    <div className="w-full mt-4 md:mt-0 md:h-screen">
+      <h2 className="text-amber-100 text-center mb-2 font-serif text-2xl">Player Two</h2>
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 justify-items-center items-center bg-amber-950/60 p-2 rounded-lg md:h-[calc(100vh-4rem)]">
+        {playerTwoInventory.map((pieceId: string) => {
+          const pieceSrc = pieceId.split('-')[0]
+          return (
+            <img 
+              key={pieceId}
+              className="h-16 w-auto md:h-20 lg:h-24 object-contain drop-shadow-md" 
+              id={pieceId} 
+              draggable 
+              src={pieceSrc} 
+              alt="pieces" 
+              onDragStart={dragStart} 
+            />
+          )
         })}
-      </div>
-      <div className="grid gird-cols-4 gap-4">
-        <img draggable className="h-1/2 w-auto" src={playerCoin} alt={playerCoin} />
       </div>
     </div>
   )
