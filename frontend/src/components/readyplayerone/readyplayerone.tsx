@@ -1,6 +1,7 @@
-import { useRef, useEffect } from "react"
-import { storm, water, fire, ice, wind, unknown, tree_coin, eye_coin } from "../../assets/images/pieces/index.ts"
+import { useRef, useEffect, useCallback } from "react"
+import { gamePieces } from "../../constants/gamePieces"
 import { useGameState } from "../../state/gameState"
+import { socketService } from "../../services/socketService"
 
 interface Piece {
   id: string;
@@ -8,48 +9,67 @@ interface Piece {
 }
 
 const ReadyPlayerOne = () => {
-  const stones: string[] = [storm, water, fire, ice, wind, unknown]
-  const coins: string[] = [tree_coin, eye_coin]
-  const playerCoin: string = coins[0]
   const dragItem = useRef<string>("")
-  const { playerOneInventory, initializeGame, resetGame, isInitialized } = useGameState()
+  const { playerOneInventory, initializeGame, resetGame, isInitialized, roomId } = useGameState()
 
-  const generatePieces = () => {
+  const generatePieces = useCallback(() => {
+    // Base rules: 21 tiles total = 4 of each element + 1 UNKNOWN
+    // Create the full bag
+    const fullBag: string[] = []
+    
+    // Add 4 of each element
+    const elements = [gamePieces.fire, gamePieces.ice, gamePieces.wind, gamePieces.storm, gamePieces.water]
+    elements.forEach(element => {
+      for (let i = 0; i < 4; i++) {
+        fullBag.push(element)
+      }
+    })
+    
+    // Add 1 UNKNOWN
+    fullBag.push(gamePieces.unknown)
+    
+    // Shuffle the bag
+    const shuffledBag = [...fullBag].sort(() => Math.random() - 0.5)
+    
+    // Each player draws 7 tiles
     const playerOnePieces: Piece[] = []
     const playerTwoPieces: Piece[] = []
+    const leftoverTiles: string[] = []
     
-    // Generate pieces for Player One
+    // Draw for Player One (7 tiles)
     for (let i = 0; i < 7; i++) {
-      const stone = stones[Math.floor(Math.random() * stones.length)]
+      const tile = shuffledBag[i]
       playerOnePieces.push({
-        id: `${stone}-${i}`,
-        src: stone
+        id: `${tile}-p1-${i}`,
+        src: tile
       })
     }
-    playerOnePieces.push({
-      id: `${playerCoin}-coin`,
-      src: playerCoin
-    })
-
-    // Generate pieces for Player Two
-    for (let i = 0; i < 7; i++) {
-      const stone = stones[Math.floor(Math.random() * stones.length)]
+    
+    // Draw for Player Two (7 tiles)
+    for (let i = 7; i < 14; i++) {
+      const tile = shuffledBag[i]
       playerTwoPieces.push({
-        id: `${stone}-${i + 7}`, // Use offset IDs to avoid conflicts
-        src: stone
+        id: `${tile}-p2-${i - 7}`,
+        src: tile
       })
     }
-    playerTwoPieces.push({
-      id: `${coins[1]}-coin`,
-      src: coins[1]
-    })
+    
+    // Remaining 7 tiles are leftover (for chaos rounds)
+    for (let i = 14; i < 21; i++) {
+      leftoverTiles.push(`${shuffledBag[i]}-leftover-${i - 14}`)
+    }
 
     // Initialize game with generated pieces
-    initializeGame(
-      playerOnePieces.map(p => p.id),
-      playerTwoPieces.map(p => p.id)
-    )
-  }
+    const playerOnePieceIds = playerOnePieces.map(p => p.id)
+    const playerTwoPieceIds = playerTwoPieces.map(p => p.id)
+    
+    initializeGame(playerOnePieceIds, playerTwoPieceIds, leftoverTiles)
+    
+    // If connected to a room, sync with server
+    if (roomId && socketService.isConnected()) {
+      socketService.emitGameInitialized(playerOnePieceIds, playerTwoPieceIds, leftoverTiles)
+    }
+  }, [roomId, initializeGame])
 
   useEffect(() => {
     // Only initialize if not already initialized
@@ -66,7 +86,7 @@ const ReadyPlayerOne = () => {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload)
     }
-  }, [isInitialized, resetGame])
+  }, [isInitialized, resetGame, generatePieces])
 
   const dragStart = (e: React.DragEvent<HTMLImageElement>) => {
     dragItem.current = e.currentTarget.id
@@ -80,14 +100,14 @@ const ReadyPlayerOne = () => {
         {playerOneInventory.map((pieceId: string) => {
           const pieceSrc = pieceId.split('-')[0]
           return (
-            <img 
+            <img
               key={pieceId}
-              className="h-16 w-auto md:h-20 lg:h-24 object-contain drop-shadow-md" 
-              id={pieceId} 
-              draggable 
-              src={pieceSrc} 
-              alt="pieces" 
-              onDragStart={dragStart} 
+              className="h-16 w-auto md:h-20 lg:h-24 object-contain drop-shadow-md"
+              id={pieceId}
+              draggable
+              src={pieceSrc}
+              alt="pieces"
+              onDragStart={dragStart}
             />
           )
         })}
