@@ -183,3 +183,5 @@ export const TILES_PER_PLAYER = 7
 export const LEFTOVER_TILES = 7
 export const TOTAL_TERRITORIES = 7
 
+
+

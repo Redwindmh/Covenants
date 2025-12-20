@@ -1,0 +1,180 @@
+COVENANTS
+Thest’s favorite pastime!
+
+Covenants is a simple, two-player game of strategy and chance. Its game pieces represent a circle of nature’s elements and the one factor that may conquer any of them: the unknown. Death, life, chance, mystery, absence…? While any specific, original inspiration for the UNKNOWN tile is lost to history, different cultures have found their own widely accepted interpretations at different times. Recently, it has become increasingly popular in many places to refer to it as the Visitor.
+
+To start the game, each player draws 7 tiles at random from a bag of 21 (containing 4 of each natural element + 1 UNKNOWN). A player’s tiles should be kept hidden from their opponent. The leftover 7 tiles should be kept face-down to the side of the board. 
+
+To indicate control of territories, the game also requires 7 two-sided coins or 2 distinct sets of 7 tokens. When using coins, players must decide whose territories will be marked with “heads” or “tails.” If playing for money, each player should have their own 7 coins (which, once played, will be collected by the game’s winner).
+
+Each player takes their turn placing one stone element tile on a territory of the game’s circular board, moving in clockwise order from “dawn” to “dusk.” A tile may be placed on the nearest empty territory or on top of the specific element tile that it can overcome: FIRE melts ICE freezes WIND blows STORM shocks WATER douses FIRE…and so on. 
+
+If a player cannot (or chooses not to) overcome the element last placed by their opponent, they must mark their forfeiture of the current territory (with a token such as a coin, indicating their opponent’s control of it) and move on to the next open space. Territories may not be skipped over or returned to.
+
+When a player places the UNKNOWN tile, they must announce what element it will take the role of. On an empty space, the player may choose any element. On an opponent-occupied space, the UNKNOWN tile must be placed as the element that would beat the one below (WATER when placed on top of a FIRE tile, for example). Since the UNKNOWN tile takes on all the properties of its chosen element, it may be beaten as that element, as well.
+
+Chaos Rounds: If players run out of tiles before every space has been claimed (or the score is a 5-5 draw), they each draw one random tile per turn from the leftover tiles. If the tiles run out, or one player has no possible moves on their turn, the game ends.
+
+A winner is determined by the combined value of territories each player controls at game’s end. The number written in each territory indicates its value (1, 2, or 3). If players are betting on a game, the winner keeps all coins on the board.
+
+
+EXAMPLE OF PLAY
+Player 1 can choose any of his element tiles to place on the first territory, “dawn.” He places a FIRE. He also picks “heads” on the two-sided coins the players will use as control markers.
+Player 2 has two choices: to place a WATER tile on top of Player 1’s FIRE, or to move onto the next territory and place any element tile there. She has one WATER in her hand, but decides to save it for later. So she places a coin “heads-up” on the first territory and puts a STORM on territory two. 
+Player 1 now controls one territory (worth 1 point).
+Player 1 doesn’t have a WIND tile, and so must forfeit this territory. He places a “tails-up” coin on the second territory and an ICE tile on territory three. 
+Player 2 now also controls one territory (worth 1 point).
+Player 2 places a FIRE tile on top of Player 1’s ICE.
+Player 1 doesn’t have a WATER tile, and so forfeits another territory and places a STORM on territory four.
+Player 2 now controls two territories (worth 2 points total).
+A few turns later…
+Player 1 places his 6th tile, another FIRE, on the 3-point “dusk” territory.
+Player 2 places the WATER she saved.
+Player 1 places his convenient final tile, a STORM.
+Player 2 was saving something else special. She places her UNKNOWN tile, acting as WIND.
+Both players are out of tiles, but they have reached the final territory and are not tied in point values; so no need for a Chaos Round. Game over!
+Player 1 controls 3 territories, including the second-to-last (4 points total).
+Player 2 controls 4 territories, including “dusk” (6 points total).
+Player 2 wins!
+
+
+VARIANT 7: Shuffle & Draw 7, 1 Shuffled Unknown, Weighted Territories v2, Elemental Unknown, Extra Draw
+
+21 + 7 GAME PIECES 
+4 of each regular element and 1 UNKNOWN tile, identical on back side
+7 smaller control pieces (or coins), which have 2 distinct sides.
+
+RULES:
+All 21 tiles are shaken up inside the game bag, before players take turns drawing blind until they each have 7. The elements on a player’s tiles are hidden from their opponent. 
+/OR/ SUB-VARIANT: All drawn tiles are visible to both players.
+
+
+When a player plays an UNKNOWN tile, they must announce what element it will take the place of. On an empty space, the player may choose any element. On an opponent-occupied space, an UNKNOWN tile must be played as the element that would beat the element below it (previously on top). As the UNKNOWN tile takes on all the properties of its chosen element, it may be beaten as that element, as well.
+
+The 7 control pieces could be common coins. Each side of a control piece (heads/tails) corresponds to one of the players. 
+
+Whenever a player gives up control of a territory and moves onto the next, he/she places a control piece on the lost territory. The side of the control piece that faces up corresponds to the opposing player, to indicate that the space has been forfeited to them.
+
+EXTRA DRAW: If players run out of tiles before every space has been claimed (or a clear winning score has been achieved), they each draw one random tile per turn from the remaining (7) tiles. If the tiles run out, or a tile is drawn that is impossible to play, the player without a possible move forfeits the space they would play on.
+
+Each territory on the spiral is assigned a point value: the first 5 spaces worth 1 each, the sixth worth 2, and the seventh worth 3.
+
+The winner is determined by adding up the point values of the territories controlled by each player. The highest combined value wins.
+
+GAMBLING: 
+Coins used as control pieces may come from the respective control-losers’ pockets (players who decide to give up a territory and move onto the next one), and at the end, the winner may collect all the coins used in the game.
+
+
+
+
+VARIANT 1: Identical Decks, 1 Unknown, Weighted Territories
+
+21 GAME PIECES: 
+4 of each regular element, 2 of each visually distinguished for each player
+1 all-black UNKNOWN tile
+
+RULES:
+Each player begins with 2 tiles of each regular element, 10 tiles total.
+Player 1 begins with 1 all-black UNKNOWN tile.
+Each territory on the spiral is assigned a point value, starting with 1 point for the outermost territory, and ending with 7 points at the center.
+The winner is determined by adding up the point values of the territories controlled by each player. The highest combined value wins.
+
+(Players must judge how many resources to use capturing early territories vs. how many to save for more valuable ones closer to the center. They may also be able to see what elements their opponents still have available as they play.)
+
+The sample board below is an illustration purely for game mechanics, not meant to be representative of the aesthetics of a proper Covenants board. Those could come in many varieties, depending on personal taste and where they were made. (The elemental key should probably not be included on proper boards, but perhaps could be shown on the reverse side.)
+
+
+VARIANT 2: Shuffled Decks, Hidden Unknown(s), Equal Territories
+
+22 + 7 GAME PIECES: 
+4 of each regular element and 2 UNKNOWN tiles, all 22 identical on back side
+7 smaller control pieces (or coins), which have 2 distinct sides.
+
+RULES:
+All 22 tiles are shuffled, face-down, before players take turns drawing until they each have 11.
+The 7 control pieces could be common coins. Each side of a control piece (heads/tails) corresponds to one of the players. 
+Whenever a player gives up control of a territory and moves onto the next, he/she places a control tile on the lost territory. The side of the control tile that faces up corresponds to the opposing player, to indicate that the space is theirs.
+The winner is determined by which player controls the most spaces once the final element is played.
+
+SUB-VARIANT: 
+Possible cap on how many tiles can be placed on each space.  Maybe 3?
+
+GAMBLING: 
+Coins used as control pieces may come from the respective control-losers’ pockets (players who decide to give up a territory and move onto the next one), and at the end, the winner may collect all the coins used in the game.
+(Though control pieces aren’t strictly necessary in Variant 1’s identical deck system, coins could still be used in this way there, too, to put money in the game.)
+
+
+VARIANT 3: Shuffled Decks, 2 Unknowns, Equal Territories
+
+22 + 7 GAME PIECES: 
+4 of each regular element, identical on back side
+2 all-black UNKNOWN tiles
+7 smaller control pieces (or coins), which have 2 distinct sides.
+
+RULES:
+Each player begins the game with 1 all-black UNKNOWN tile.
+The 20 regular element tiles are shuffled, face-down, before players take turns drawing until they each have 10.
+The 7 control tiles could be common coins. Each side of a control tile (heads/tails) corresponds to one of the players. 
+Whenever a player gives up control of a territory and moves onto the next, he/she places a control piece on the lost territory. The side of the control piece that faces up corresponds to the opposing player, to indicate that the space is theirs.
+The winner is determined by which player controls the most spaces once the final element is played.
+
+SUB-VARIANT: 
+Possible cap on how many tiles can be placed on each space.  Maybe 3?
+
+GAMBLING: 
+Coins used as control pieces may come from the respective control-losers’ pockets (players who decide to give up a territory and move onto the next one), and at the end, the winner may collect all the coins used in the game.
+
+
+VARIANT 4: Shuffled Decks, Hidden Unknown(s), Weighted Territories
+
+22 + 7 GAME PIECES: 
+4 of each regular element and 2 UNKNOWN tiles, all 22 identical on back side
+7 smaller control pieces (or coins), which have 2 distinct sides.
+
+RULES:
+All 22 tiles are shuffled, face-down, before players take turns drawing until they each have 11.
+The 7 control pieces could be common coins. Each side of a control piece (heads/tails) corresponds to one of the players. 
+Whenever a player gives up control of a territory and moves onto the next, he/she places a control piece on the lost territory. The side of the control piece that faces up corresponds to the opposing player, to indicate that the space is theirs.
+Each territory on the spiral is assigned a point value, starting with 1 point for the outermost territory, and ending with 7 points at the center.
+The winner is determined by adding up the point values of the territories controlled by each player. The highest combined value wins.
+
+GAMBLING: 
+Coins used as control pieces may come from the respective control-losers’ pockets (players who decide to give up a territory and move onto the next one), and at the end, the winner may collect all the coins used in the game.
+
+
+VARIANT 5: Shuffled Decks, 2 Unknowns, Weighted Territories
+
+22 + 7 GAME PIECES: 
+4 of each regular element, identical on back side
+2 all-black UNKNOWN tiles
+7 smaller control pieces (or coins), which have 2 distinct sides.
+
+RULES:
+Each player begins the game with 1 all-black UNKNOWN tile.
+The 20 regular element tiles are shuffled, face-down, before players take turns drawing until they each have 10.
+The 7 control pieces could be common coins. Each side of a control piece (heads/tails) corresponds to one of the players. 
+Whenever a player gives up control of a territory and moves onto the next, he/she places a control piece on the lost territory. The side of the control piece (heads/tails) that faces up represents the opposing player, to indicate that the space is theirs.
+Each territory on the spiral is assigned a point value, starting with 1 point for the outermost territory, and ending with 7 points at the center.
+The winner is determined by adding up the point values of the territories controlled by each player. The highest combined value wins.
+
+GAMBLING: 
+Coins used as control pieces may come from the respective control-losers’ pockets (players who decide to give up a territory and move onto the next one), and at the end, the winner may collect all the coins used in the game.
+
+VARIANT 6: Shuffle & Draw 7, 1 Shuffled Unknown, Weighted Territories
+
+21 + 7 GAME PIECES 
+4 of each regular element, identical on back side
+1 all-black UNKNOWN tile
+7 smaller control pieces (or coins), which have 2 distinct sides.
+
+RULES:
+All 21 tiles are shaken up inside the game bag, before players take turns drawing blind until they each have 7. The all-black UNKNOWN tile is obvious to both players if drawn, but the other tiles are only seen by their owner. /OR/ All drawn tiles are visible to both players.
+The 7 control pieces could be common coins. Each side of a control piece (heads/tails) corresponds to one of the players. 
+Whenever a player gives up control of a territory and moves onto the next, he/she places a control piece on the lost territory. The side of the control piece that faces up corresponds to the opposing player, to indicate that the space is theirs.
+Each territory on the spiral is assigned a point value, starting with 1 point for the outermost territory, and ending with 7 points at the center.
+The winner is determined by adding up the point values of the territories controlled by each player. The highest combined value wins.
+
+GAMBLING: 
+Coins used as control pieces may come from the respective control-losers’ pockets (players who decide to give up a territory and move onto the next one), and at the end, the winner may collect all the coins used in the game.
+
+
