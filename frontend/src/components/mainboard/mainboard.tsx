@@ -1,20 +1,30 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { useGameState } from "../../state/gameState";
+import { socketService } from "../../services/socketService";
 
-// ts-nocheck Create catch to prevent user from placing pieces outside of designated areas on board an maybe stacjing on same spot? Or, maybe add some special feature for when pieces are stacked?
+// TODO: Create catch to prevent user from placing pieces outside of designated areas on board and maybe stacking on same spot? Or, maybe add some special feature for when pieces are stacked?
 
 interface DragOverItem {
   current: string;
 }
 
 const MainBoard = () => {
-  const matrixSize: number[] = [16, 16];
-  const matrix: number[] = [];
-  for (let i = 0; i < matrixSize[0]; i++) { matrix.push(i) }
+  const matrix: number[] = useMemo(() => {
+    const arr: number[] = [];
+    for (let i = 0; i < 16; i++) { arr.push(i) }
+    return arr;
+  }, [])
 
   const dragOverItem = useRef<DragOverItem>({ current: "" })
-  const { removeFromInventory, playerOneInventory, playerTwoInventory } = useGameState()
-  const [currentPlayer, setCurrentPlayer] = useState<1 | 2>(1)
+  const { 
+    playerOneInventory, 
+    playerTwoInventory, 
+    currentPlayer,
+    playerNumber,
+    boardState,
+    placePiece,
+    roomId
+  } = useGameState()
   const [showTurnNotice, setShowTurnNotice] = useState(true)
   const [isInvalidMove, setIsInvalidMove] = useState(false)
   const [noticeTimeout, setNoticeTimeout] = useState<number | null>(null)
@@ -67,15 +77,36 @@ const MainBoard = () => {
     const draggedPieceId = e.dataTransfer.getData("text/plain")
     if (!draggedPieceId) return
 
+    // Check if it's the current player's turn
+    if (playerNumber !== currentPlayer) {
+      showNotice(true)
+      return
+    }
+
     // Check if it's the current player's piece
     if (!isPlayersPiece(draggedPieceId, currentPlayer)) {
       showNotice(true)
       return
     }
 
+    // Parse position from target ID (format: "x,y")
+    const [x, y] = target.id.split(',').map(Number)
+    if (isNaN(x) || isNaN(y)) {
+      console.error('Invalid position:', target.id)
+      return
+    }
+
     const pieceSrc = draggedPieceId.split('-')[0]
     
     try {
+      // If connected to a room, emit to server (multiplayer mode)
+      if (roomId && socketService.isConnected()) {
+        socketService.emitPiecePlaced(draggedPieceId, { x, y }, currentPlayer)
+      } else {
+        // Local mode - update state directly
+        placePiece(draggedPieceId, { x, y }, currentPlayer)
+      }
+      
       // Create the piece element
       const droppedPiece = document.createElement("img")
       droppedPiece.src = pieceSrc
@@ -85,14 +116,9 @@ const MainBoard = () => {
       if (target && target.isConnected) {
         target.innerHTML = ''
         target.appendChild(droppedPiece)
-        
-        // Remove from inventory
-        await removeFromInventory(currentPlayer, draggedPieceId)
-        
-        // Switch to the other player's turn
-        setCurrentPlayer(currentPlayer === 1 ? 2 : 1)
-        showNotice(false)
       }
+      
+      showNotice(false)
     } catch (error) {
       console.error('Error handling piece drop:', error)
       if (target && target.isConnected) {
@@ -101,13 +127,38 @@ const MainBoard = () => {
     }
   }
 
+  // Sync board state from server/local state
+  useEffect(() => {
+    // Clear all cells first
+    matrix.forEach((row) => {
+      matrix.forEach((col) => {
+        const cell = document.getElementById(`${col},${row}`)
+        if (cell) {
+          cell.innerHTML = ''
+        }
+      })
+    })
+
+    // Render pieces from boardState
+    boardState.forEach((position, key) => {
+      const cell = document.getElementById(key)
+      if (cell && position.pieceId) {
+        const pieceSrc = position.pieceId.split('-')[0]
+        const pieceImg = document.createElement("img")
+        pieceImg.src = pieceSrc
+        pieceImg.className = "h-[180%] w-auto object-contain drop-shadow-xl transform -translate-y-[20%]"
+        cell.appendChild(pieceImg)
+      }
+    })
+  }, [boardState, matrix])
+
   useEffect(() => {
     return () => {
       if (noticeTimeout) {
         clearTimeout(noticeTimeout)
       }
     }
-  }, [])
+  }, [noticeTimeout])
 
   return (
     <div className="w-full relative">
@@ -144,7 +195,9 @@ const MainBoard = () => {
         >
           {isInvalidMove 
             ? `Invalid move - It's Player ${currentPlayer}'s turn` 
-            : `Player ${currentPlayer}'s turn`}
+            : playerNumber 
+              ? `Player ${currentPlayer}'s turn${playerNumber === currentPlayer ? ' (Your turn!)' : ''}`
+              : `Player ${currentPlayer}'s turn`}
         </div>
       </div>
     </div>

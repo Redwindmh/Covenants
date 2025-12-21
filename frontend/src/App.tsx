@@ -1,11 +1,13 @@
 import ReadyPlayerOne from './components/readyplayerone/readyplayerone.tsx'
 import MainBoard from './components/mainboard/mainboard.tsx'
 import ReadyPlayerTwo from './components/readyplayertwo/readyplayertwo.tsx'
+import RoomManager from './components/room/RoomManager.tsx'
 import './App.css'
 
 function App() {
   return (
     <div className="flex flex-col md:flex-row items-center justify-center min-h-screen p-2 md:p-4 overflow-hidden">
+      <RoomManager />
       <div className="w-full max-w-[600px] md:max-w-none h-full">
         {/* Mobile Layout */}
         <div className="md:hidden w-full flex flex-col gap-2">
