@@ -3,7 +3,10 @@ import { useGameState } from "../../state/gameState";
 import { socketService } from "../../services/socketService";
 import { validatePlacement, canPlaceOnCurrentTerritory } from "../../utils/gameValidation";
 import { getElementFromPieceId, Element, getTerritoryForCell } from "../../constants/gameRules";
+import { checkGameEnd, calculateScores } from "../../utils/gameEndDetection";
 import UnknownSelectionModal from "../UnknownSelectionModal";
+import GameEndModal from "../GameEndModal";
+import ChaosRoundModal from "../ChaosRoundModal";
 
 interface DragOverItem {
   current: string;
@@ -35,6 +38,7 @@ const MainBoard = () => {
   const [isInvalidMove, setIsInvalidMove] = useState(false)
   const [noticeTimeout, setNoticeTimeout] = useState<number | null>(null)
   const [showUnknownModal, setShowUnknownModal] = useState(false)
+  const [showChaosModal, setShowChaosModal] = useState(false)
   const [pendingPlacement, setPendingPlacement] = useState<{
     pieceId: string
     position: { x: number; y: number }
@@ -106,6 +110,34 @@ const MainBoard = () => {
       if (territory && gameStatus.currentTerritoryIndex < 6) {
         setGameStatus({ currentTerritoryIndex: gameStatus.currentTerritoryIndex + 1 })
       }
+      
+      // Check for game end after placement
+      setTimeout(() => {
+        const endResult = checkGameEnd(
+          gameStatus,
+          playerOneInventory,
+          playerTwoInventory,
+          boardState,
+          territoryControl,
+          currentPlayer === 1 ? 2 : 1 // Next player's turn
+        )
+        
+        if (endResult.gameEnded) {
+          setGameStatus({
+            gameEnded: true,
+            winner: endResult.winner || null,
+            playerOneScore: endResult.playerOneScore,
+            playerTwoScore: endResult.playerTwoScore,
+          })
+        } else {
+          // Update scores
+          const scores = calculateScores(territoryControl)
+          setGameStatus({
+            playerOneScore: scores.playerOneScore,
+            playerTwoScore: scores.playerTwoScore,
+          })
+        }
+      }, 100)
       
       showNotice(false)
     } catch (error) {
@@ -201,6 +233,16 @@ const MainBoard = () => {
   // Check if player can place on current territory
   const canPlace = useMemo(() => {
     const currentPlayerInventory = currentPlayer === 1 ? playerOneInventory : playerTwoInventory
+    
+    // If player has no tiles, check if chaos round should start
+    if (currentPlayerInventory.length === 0 && gameStatus.leftoverTiles.length > 0 && !gameStatus.chaosRoundActive) {
+      // Trigger chaos round
+      if (playerNumber === currentPlayer) {
+        setShowChaosModal(true)
+      }
+      return false
+    }
+    
     return canPlaceOnCurrentTerritory(
       currentPlayer,
       gameStatus.currentTerritoryIndex,
@@ -208,7 +250,36 @@ const MainBoard = () => {
       territoryControl,
       currentPlayerInventory
     )
-  }, [currentPlayer, gameStatus.currentTerritoryIndex, boardState, territoryControl, playerOneInventory, playerTwoInventory])
+  }, [currentPlayer, gameStatus.currentTerritoryIndex, gameStatus.leftoverTiles, gameStatus.chaosRoundActive, boardState, territoryControl, playerOneInventory, playerTwoInventory, playerNumber])
+
+  // Check for game end on turn change
+  useEffect(() => {
+    if (gameStatus.gameEnded) return
+
+    const endResult = checkGameEnd(
+      gameStatus,
+      playerOneInventory,
+      playerTwoInventory,
+      boardState,
+      territoryControl,
+      currentPlayer
+    )
+
+    if (endResult.gameEnded) {
+      setGameStatus({
+        gameEnded: true,
+        winner: endResult.winner || null,
+        playerOneScore: endResult.playerOneScore,
+        playerTwoScore: endResult.playerTwoScore,
+      })
+    } else {
+      const scores = calculateScores(territoryControl)
+      setGameStatus({
+        playerOneScore: scores.playerOneScore,
+        playerTwoScore: scores.playerTwoScore,
+      })
+    }
+  }, [currentPlayer, playerOneInventory.length, playerTwoInventory.length, boardState, territoryControl, gameStatus])
 
   // Sync board state from server/local state
   useEffect(() => {
@@ -256,6 +327,28 @@ const MainBoard = () => {
     ? gameStatus.currentTerritoryIndex + 1 
     : null
 
+  const handleChaosDraw = (tileId: string) => {
+    // Add tile to current player's inventory
+    const currentPlayerInventory = currentPlayer === 1 ? playerOneInventory : playerTwoInventory
+    // Remove from leftover tiles
+    const newLeftoverTiles = gameStatus.leftoverTiles.filter(t => t !== tileId)
+    
+    if (currentPlayer === 1) {
+      // Add to player one inventory (would need to update state)
+      // This should be handled through game state update
+    }
+    
+    setGameStatus({ 
+      leftoverTiles: newLeftoverTiles,
+      chaosRoundActive: true 
+    })
+    setShowChaosModal(false)
+  }
+
+  const handleNewGame = () => {
+    window.location.reload() // Simple reset for now
+  }
+
   return (
     <div className="w-full relative">
       <UnknownSelectionModal
@@ -268,17 +361,37 @@ const MainBoard = () => {
         }}
       />
       
+      <ChaosRoundModal
+        isOpen={showChaosModal}
+        leftoverTiles={gameStatus.leftoverTiles}
+        onDraw={handleChaosDraw}
+        onCancel={() => setShowChaosModal(false)}
+      />
+      
+      <GameEndModal
+        isOpen={gameStatus.gameEnded}
+        gameStatus={gameStatus}
+        onClose={() => {}}
+        onNewGame={handleNewGame}
+      />
+      
       <div className="absolute inset-0 bg-gradient-to-b from-amber-900/20 to-amber-950/20 pointer-events-none" />
       <div className="relative">
         <h1 className="text-amber-100 text-center mb-6 font-serif text-4xl tracking-wide drop-shadow-lg">
           Covenants
         </h1>
         
-        {currentTerritory && (
-          <div className="text-amber-200 text-center mb-2 text-sm">
-            Current Territory: {currentTerritory} {currentTerritory === 1 ? '(Dawn)' : currentTerritory === 7 ? '(Dusk)' : ''}
+        <div className="flex justify-between items-center mb-4 px-4">
+          <div className="text-amber-200 text-sm">
+            {currentTerritory && (
+              <>Territory: {currentTerritory} {currentTerritory === 1 ? '(Dawn)' : currentTerritory === 7 ? '(Dusk)' : ''}</>
+            )}
           </div>
-        )}
+          <div className="flex gap-4 text-amber-200 text-sm">
+            <span>P1: {gameStatus.playerOneScore}pts</span>
+            <span>P2: {gameStatus.playerTwoScore}pts</span>
+          </div>
+        </div>
         
         {playerNumber === currentPlayer && !canPlace && (
           <div className="text-center mb-2">
