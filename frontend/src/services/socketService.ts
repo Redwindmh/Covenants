@@ -129,6 +129,32 @@ class SocketService {
     })
   }
 
+  emitTerritoryForfeit(territoryId: number, forfeitingPlayer: number): void {
+    if (!this.socket || !this.roomId) {
+      console.error('Socket not connected or no room joined')
+      return
+    }
+
+    this.socket.emit('territory-forfeit', {
+      roomId: this.roomId,
+      territoryId,
+      forfeitingPlayer,
+    })
+  }
+
+  emitChaosDraw(tileId: string, playerNumber: number): void {
+    if (!this.socket || !this.roomId) {
+      console.error('Socket not connected or no room joined')
+      return
+    }
+
+    this.socket.emit('chaos-draw', {
+      roomId: this.roomId,
+      playerNumber,
+      tileId,
+    })
+  }
+
   getSocket(): Socket | null {
     return this.socket
   }

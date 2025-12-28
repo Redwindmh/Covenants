@@ -31,6 +31,7 @@ const MainBoard = () => {
     placePiece,
     forfeitTerritory,
     setGameStatus,
+    addTileToInventory,
     roomId
   } = useGameState()
   
@@ -216,18 +217,22 @@ const MainBoard = () => {
   }
 
   const handleForfeitTerritory = () => {
-    const currentTerritory = gameStatus.currentTerritoryIndex
-    if (currentTerritory >= 7) return
+    const currentTerritory = gameStatus.currentTerritoryIndex + 1
+    if (currentTerritory > 7) return
 
-    forfeitTerritory(currentTerritory + 1, currentPlayer)
-    
-    // Advance to next territory
-    if (gameStatus.currentTerritoryIndex < 6) {
-      setGameStatus({ currentTerritoryIndex: gameStatus.currentTerritoryIndex + 1 })
+    if (roomId && socketService.isConnected()) {
+      socketService.emitTerritoryForfeit(currentTerritory, currentPlayer)
+    } else {
+      forfeitTerritory(currentTerritory, currentPlayer)
+      
+      // Advance to next territory
+      if (gameStatus.currentTerritoryIndex < 6) {
+        setGameStatus({ currentTerritoryIndex: gameStatus.currentTerritoryIndex + 1 })
+      }
+      
+      // Switch turns
+      setGameStatus({ currentPlayer: currentPlayer === 1 ? 2 : 1 })
     }
-    
-    // Switch turns
-    setGameStatus({ currentPlayer: currentPlayer === 1 ? 2 : 1 })
   }
 
   // Check if player can place on current territory
@@ -328,20 +333,17 @@ const MainBoard = () => {
     : null
 
   const handleChaosDraw = (tileId: string) => {
-    // Add tile to current player's inventory
-    const currentPlayerInventory = currentPlayer === 1 ? playerOneInventory : playerTwoInventory
-    // Remove from leftover tiles
-    const newLeftoverTiles = gameStatus.leftoverTiles.filter(t => t !== tileId)
-    
-    if (currentPlayer === 1) {
-      // Add to player one inventory (would need to update state)
-      // This should be handled through game state update
+    if (roomId && socketService.isConnected()) {
+      socketService.emitChaosDraw(tileId, currentPlayer)
+    } else {
+      // Local mode - update state directly
+      const newLeftoverTiles = gameStatus.leftoverTiles.filter(t => t !== tileId)
+      addTileToInventory(currentPlayer, tileId)
+      setGameStatus({ 
+        leftoverTiles: newLeftoverTiles,
+        chaosRoundActive: true 
+      })
     }
-    
-    setGameStatus({ 
-      leftoverTiles: newLeftoverTiles,
-      chaosRoundActive: true 
-    })
     setShowChaosModal(false)
   }
 
