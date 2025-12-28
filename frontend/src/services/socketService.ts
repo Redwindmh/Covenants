@@ -100,7 +100,7 @@ class SocketService {
     this.socket.on('player-left', callback)
   }
 
-  emitPiecePlaced(pieceId: string, position: { x: number; y: number }, playerNumber: number): void {
+  emitPiecePlaced(pieceId: string, position: { x: number; y: number }, playerNumber: number, resolvedElement?: string): void {
     if (!this.socket || !this.roomId) {
       console.error('Socket not connected or no room joined')
       return
@@ -111,6 +111,7 @@ class SocketService {
       pieceId,
       position,
       playerNumber,
+      resolvedElement,
     })
   }
 
