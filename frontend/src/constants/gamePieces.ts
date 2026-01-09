@@ -19,7 +19,10 @@ export const gamePieces = {
   unknown,
   tree_coin,
   eye_coin
-}
+} as const
 
 // Also export as array for backward compatibility if needed
-export const gamePiecesArray = [storm, water, fire, ice, wind, unknown, tree_coin, eye_coin]
+export const gamePiecesArray = [storm, water, fire, ice, wind, unknown, tree_coin, eye_coin] as const
+
+// Type exports
+export type GamePiece = keyof typeof gamePieces

@@ -80,7 +80,7 @@ class SocketService {
   onGameStateUpdate(callback: (gameState: {
     playerOneInventory: string[]
     playerTwoInventory: string[]
-    boardState: Record<string, { x: number; y: number; pieceId: string; playerNumber: number }>
+    boardState: Record<string, { x: number; y: number; pieceId: string | null; playerNumber: 1 | 2 | null }>
     currentPlayer: 1 | 2
   }) => void): void {
     if (!this.socket) return

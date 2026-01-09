@@ -26,8 +26,8 @@ export const useSocket = () => {
     })
 
     socketService.onPlayerJoined(({ playerNumber: pNum }) => {
-      if (!playerNumber) {
-        setPlayerNumber(pNum)
+      if (!playerNumber && (pNum === 1 || pNum === 2)) {
+        setPlayerNumber(pNum as 1 | 2)
       }
     })
 
@@ -40,7 +40,7 @@ export const useSocket = () => {
     return () => {
       // Only disconnect if this is a real unmount (not StrictMode double-mount)
       // We'll let the socket stay connected for hot reloading
-      if (process.env.NODE_ENV === 'production') {
+      if (import.meta.env.PROD) {
         socketService.disconnect()
       }
     }
@@ -57,9 +57,9 @@ export const useSocket = () => {
 
   const joinRoom = (roomIdToJoin: string, callback?: (success: boolean) => void) => {
     socketService.joinRoom(roomIdToJoin, (success, data) => {
-      if (success && data) {
+      if (success && data && (data.playerNumber === 1 || data.playerNumber === 2)) {
         setRoomId(roomIdToJoin)
-        setPlayerNumber(data.playerNumber)
+        setPlayerNumber(data.playerNumber as 1 | 2)
         callback?.(true)
       } else {
         callback?.(false)

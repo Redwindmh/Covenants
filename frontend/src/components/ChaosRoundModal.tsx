@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { gamePieces } from '../constants/gamePieces'
 
 interface ChaosRoundModalProps {
   isOpen: boolean

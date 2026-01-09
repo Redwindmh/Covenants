@@ -2,7 +2,7 @@ import { useRef, useState, useEffect, useMemo } from "react";
 import { useGameState } from "../../state/gameState";
 import { socketService } from "../../services/socketService";
 import { validatePlacement, canPlaceOnCurrentTerritory } from "../../utils/gameValidation";
-import { getElementFromPieceId, Element, getTerritoryForCell } from "../../constants/gameRules";
+import { getElementFromPieceId, Element } from "../../constants/gameRules";
 import { checkGameEnd, calculateScores } from "../../utils/gameEndDetection";
 import UnknownSelectionModal from "../UnknownSelectionModal";
 import GameEndModal from "../GameEndModal";
@@ -31,6 +31,7 @@ const MainBoard = () => {
     placePiece,
     forfeitTerritory,
     setGameStatus,
+    setCurrentPlayer,
     addTileToInventory,
     roomId
   } = useGameState()
@@ -58,7 +59,7 @@ const MainBoard = () => {
     dragOverItem.current.current = e.currentTarget.id
   }
 
-  const showNotice = (invalid: boolean = false, message?: string) => {
+  const showNotice = (invalid: boolean = false, _message?: string) => {
     if (noticeTimeout) {
       clearTimeout(noticeTimeout)
     }
@@ -230,9 +231,27 @@ const MainBoard = () => {
       }
       
       // Switch turns
-      setGameStatus({ currentPlayer: currentPlayer === 1 ? 2 : 1 })
+      setCurrentPlayer(currentPlayer === 1 ? 2 : 1)
     }
   }
+
+  // Check if chaos round should be active
+  const shouldShowChaosModal = useMemo(() => {
+    const currentPlayerInventory = currentPlayer === 1 ? playerOneInventory : playerTwoInventory
+    return currentPlayerInventory.length === 0 && 
+           gameStatus.leftoverTiles.length > 0 && 
+           !gameStatus.chaosRoundActive && 
+           playerNumber === currentPlayer
+  }, [currentPlayer, playerOneInventory, playerTwoInventory, gameStatus.leftoverTiles, gameStatus.chaosRoundActive, playerNumber])
+
+  // Sync showChaosModal with derived game state
+  // This is intentional: we need to show the modal when game conditions are met
+  useEffect(() => {
+    if (shouldShowChaosModal && !showChaosModal) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setShowChaosModal(true)
+    }
+  }, [shouldShowChaosModal, showChaosModal])
 
   // Check if player can place on current territory
   const canPlace = useMemo(() => {
@@ -240,10 +259,6 @@ const MainBoard = () => {
     
     // If player has no tiles, check if chaos round should start
     if (currentPlayerInventory.length === 0 && gameStatus.leftoverTiles.length > 0 && !gameStatus.chaosRoundActive) {
-      // Trigger chaos round
-      if (playerNumber === currentPlayer) {
-        setShowChaosModal(true)
-      }
       return false
     }
     
@@ -254,7 +269,7 @@ const MainBoard = () => {
       territoryControl,
       currentPlayerInventory
     )
-  }, [currentPlayer, gameStatus.currentTerritoryIndex, gameStatus.leftoverTiles, gameStatus.chaosRoundActive, boardState, territoryControl, playerOneInventory, playerTwoInventory, playerNumber])
+  }, [currentPlayer, gameStatus.currentTerritoryIndex, gameStatus.leftoverTiles, gameStatus.chaosRoundActive, boardState, territoryControl, playerOneInventory, playerTwoInventory])
 
   // Check for game end on turn change
   useEffect(() => {
@@ -283,7 +298,7 @@ const MainBoard = () => {
         playerTwoScore: scores.playerTwoScore,
       })
     }
-  }, [currentPlayer, playerOneInventory.length, playerTwoInventory.length, boardState, territoryControl, gameStatus])
+  }, [currentPlayer, playerOneInventory, playerTwoInventory, boardState, territoryControl, gameStatus, setGameStatus])
 
   // Sync board state from server/local state
   useEffect(() => {
@@ -310,11 +325,11 @@ const MainBoard = () => {
     })
 
     // Render control coins
-    territoryControl.forEach((control, territoryId) => {
+    territoryControl.forEach((control, _territoryId) => {
       if (control.controlCoin) {
-        const territory = getTerritoryForCell(control.pieces[0]?.pieceId ? 0 : 0, 0) // Get first cell of territory
         // For now, we'll render coins as part of territory control UI
         // This will be enhanced with visual indicators
+        // TODO: Add visual indicators for control coins
       }
     })
   }, [boardState, territoryControl, matrix])

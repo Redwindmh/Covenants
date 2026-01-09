@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { Territory, TERRITORIES, getElementFromPieceId } from '../constants/gameRules'
+import { TERRITORIES, getElementFromPieceId } from '../constants/gameRules'
 
 export interface BoardPosition {
   x: number
@@ -47,9 +47,9 @@ interface GameState {
     playerOneInventory: string[]
     playerTwoInventory: string[]
     boardState: Record<string, BoardPosition>
-    territoryControl: Record<number, TerritoryControl>
+    territoryControl?: Record<number, TerritoryControl>
     currentPlayer: 1 | 2
-    gameStatus: GameStatus
+    gameStatus?: GameStatus
   }) => void
   setPlayerNumber: (playerNumber: 1 | 2) => void
   setRoomId: (roomId: string) => void
@@ -95,7 +95,6 @@ export const useGameState = create<GameState>((set) => ({
     set((state) => {
       const newBoardState = new Map(state.boardState)
       const key = `${position.x},${position.y}`
-      const existingPosition = newBoardState.get(key)
       
       // Update board position
       newBoardState.set(key, {
@@ -201,17 +200,19 @@ export const useGameState = create<GameState>((set) => ({
     })
     
     const territoryControlMap = new Map<number, TerritoryControl>()
-    Object.entries(gameState.territoryControl).forEach(([key, value]) => {
-      territoryControlMap.set(Number(key), value)
-    })
+    if (gameState.territoryControl) {
+      Object.entries(gameState.territoryControl).forEach(([key, value]) => {
+        territoryControlMap.set(Number(key), value)
+      })
+    }
     
-    set(() => ({
+    set((state) => ({
       playerOneInventory: gameState.playerOneInventory,
       playerTwoInventory: gameState.playerTwoInventory,
       boardState: boardStateMap,
-      territoryControl: territoryControlMap,
+      territoryControl: gameState.territoryControl ? territoryControlMap : state.territoryControl,
       currentPlayer: gameState.currentPlayer,
-      gameStatus: gameState.gameStatus,
+      gameStatus: gameState.gameStatus || state.gameStatus,
     }))
   },
   

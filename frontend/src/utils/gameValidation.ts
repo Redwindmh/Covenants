@@ -17,7 +17,7 @@ export function validatePlacement(
   player: 1 | 2,
   currentTerritoryIndex: number,
   boardState: Map<string, BoardPosition>,
-  territoryControl: Map<number, TerritoryControl>,
+  _territoryControl: Map<number, TerritoryControl>,
   playerInventory: string[]
 ): PlacementValidationResult {
   // Check if piece is in player's inventory
@@ -40,7 +40,6 @@ export function validatePlacement(
   // Check if territory already has pieces
   const key = `${position.x},${position.y}`
   const existingPosition = boardState.get(key)
-  const territoryControlInfo = territoryControl.get(territory.id)
 
   // If placing on empty territory
   if (!existingPosition || !existingPosition.pieceId) {
@@ -88,7 +87,7 @@ export function canPlaceOnCurrentTerritory(
   player: 1 | 2,
   currentTerritoryIndex: number,
   boardState: Map<string, BoardPosition>,
-  territoryControl: Map<number, TerritoryControl>,
+  _territoryControl: Map<number, TerritoryControl>,
   playerInventory: string[]
 ): boolean {
   const territory = TERRITORIES[currentTerritoryIndex]
@@ -98,7 +97,6 @@ export function canPlaceOnCurrentTerritory(
   for (const cell of territory.cells) {
     const key = `${cell.x},${cell.y}`
     const existingPosition = boardState.get(key)
-    const territoryControlInfo = territoryControl.get(territory.id)
 
     // If empty, can place any piece
     if (!existingPosition || !existingPosition.pieceId) {
@@ -134,14 +132,12 @@ export function canPlaceOnCurrentTerritory(
  */
 export function getValidPlacementPositions(
   currentTerritoryIndex: number,
-  boardState: Map<string, BoardPosition>
+  _boardState: Map<string, BoardPosition>
 ): Array<{ x: number; y: number }> {
   const territory = TERRITORIES[currentTerritoryIndex]
   if (!territory) return []
 
-  return territory.cells.filter(cell => {
-    const key = `${cell.x},${cell.y}`
-    const existing = boardState.get(key)
+  return territory.cells.filter(_cell => {
     // Valid if empty or if we can place on top (will be validated separately)
     return true
   })
