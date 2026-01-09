@@ -6,15 +6,20 @@ class SocketService {
   private playerId: string | null = null
 
   connect(serverUrl: string = 'http://localhost:3001'): Socket {
+    console.log('[socketService] connect() called, serverUrl:', serverUrl)
+    
     // Return existing socket if already connected or connecting
     if (this.socket) {
       if (this.socket.connected) {
+        console.log('[socketService] Already connected, returning existing socket')
         return this.socket
       }
       // If socket exists but not connected, disconnect it first to avoid duplicates
+      console.log('[socketService] Socket exists but not connected, disconnecting first')
       this.socket.disconnect()
     }
 
+    console.log('[socketService] Creating new socket connection...')
     this.socket = io(serverUrl, {
       transports: ['websocket', 'polling'],
       reconnection: true,
@@ -24,18 +29,19 @@ class SocketService {
     })
 
     this.socket.on('connect', () => {
-      console.log('Connected to server:', this.socket?.id)
+      console.log('[socketService] Socket connected! ID:', this.socket?.id)
       this.playerId = this.socket?.id || null
     })
 
     this.socket.on('disconnect', () => {
-      console.log('Disconnected from server')
+      console.log('[socketService] Socket disconnected')
     })
 
     this.socket.on('connect_error', (error) => {
-      console.error('Connection error:', error)
+      console.error('[socketService] Connection error:', error)
     })
 
+    console.log('[socketService] Socket created, returning')
     return this.socket
   }
 
@@ -63,6 +69,17 @@ class SocketService {
         callback?.(false)
       }
     })
+  }
+
+  leaveRoom(): void {
+    if (!this.socket || !this.roomId) {
+      console.log('[socketService] No room to leave')
+      return
+    }
+    
+    console.log('[socketService] Leaving room:', this.roomId)
+    this.socket.emit('leave-room', this.roomId)
+    this.roomId = null
   }
 
   createRoom(callback?: (roomId: string) => void): void {

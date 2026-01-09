@@ -169,6 +169,12 @@ export const useGameState = create<GameState>((set) => ({
   },
   
   initializeGame: (playerOnePieces: string[], playerTwoPieces: string[], leftoverTiles: string[]) => {
+    console.log('[gameState] initializeGame called:', {
+      p1Pieces: playerOnePieces.length,
+      p2Pieces: playerTwoPieces.length,
+      leftover: leftoverTiles.length
+    })
+    
     // Initialize territory control map
     const initialTerritoryControl = new Map<number, TerritoryControl>()
     TERRITORIES.forEach(territory => {
@@ -191,9 +197,17 @@ export const useGameState = create<GameState>((set) => ({
       },
       isInitialized: true,
     }))
+    
+    console.log('[gameState] Game initialized, isInitialized set to true')
   },
   
   syncGameState: (gameState) => {
+    console.log('[gameState] syncGameState called:', {
+      p1Inventory: gameState.playerOneInventory?.length,
+      p2Inventory: gameState.playerTwoInventory?.length,
+      currentPlayer: gameState.currentPlayer
+    })
+    
     const boardStateMap = new Map<string, BoardPosition>()
     Object.entries(gameState.boardState).forEach(([key, value]) => {
       boardStateMap.set(key, value)
@@ -206,6 +220,9 @@ export const useGameState = create<GameState>((set) => ({
       })
     }
     
+    // Check if this is a valid initialized game state (has inventories)
+    const hasValidGameState = gameState.playerOneInventory?.length > 0 || gameState.playerTwoInventory?.length > 0
+    
     set((state) => ({
       playerOneInventory: gameState.playerOneInventory,
       playerTwoInventory: gameState.playerTwoInventory,
@@ -213,7 +230,13 @@ export const useGameState = create<GameState>((set) => ({
       territoryControl: gameState.territoryControl ? territoryControlMap : state.territoryControl,
       currentPlayer: gameState.currentPlayer,
       gameStatus: gameState.gameStatus || state.gameStatus,
+      // Mark as initialized if we received valid game state
+      isInitialized: hasValidGameState ? true : state.isInitialized,
     }))
+    
+    if (hasValidGameState) {
+      console.log('[gameState] Synced valid game state, isInitialized set to true')
+    }
   },
   
   setPlayerNumber: (playerNumber: 1 | 2) => set(() => ({ playerNumber })),

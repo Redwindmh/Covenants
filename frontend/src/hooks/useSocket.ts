@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { socketService } from '../services/socketService'
 import { useGameState } from '../state/gameState'
 
@@ -7,45 +7,72 @@ export const useSocket = () => {
     syncGameState, 
     setPlayerNumber, 
     setRoomId, 
+    resetGame,
     playerNumber,
     roomId 
   } = useGameState()
-  const initialized = useRef(false)
+  const [isConnected, setIsConnected] = useState(() => {
+    // Initialize with current socket state
+    return socketService.isConnected()
+  })
 
   useEffect(() => {
-    // Only initialize once, even with React StrictMode
-    if (initialized.current) return
-    initialized.current = true
-
-    // Connect to server
-    socketService.connect()
-
-    // Set up event listeners
-    socketService.onGameStateUpdate((gameState) => {
+    console.log('[useSocket] Setting up socket connection and handlers...')
+    
+    // Connect to server (socketService handles preventing duplicate connections)
+    const socket = socketService.connect()
+    
+    // Handler functions defined inside effect to capture latest state
+    const handleConnect = () => {
+      console.log('[useSocket] Socket connected!')
+      setIsConnected(true)
+    }
+    
+    const handleDisconnect = () => {
+      console.log('[useSocket] Socket disconnected!')
+      setIsConnected(false)
+    }
+    
+    const handleGameStateUpdate = (gameState: Parameters<typeof syncGameState>[0]) => {
+      console.log('[useSocket] Received game state update:', gameState)
       syncGameState(gameState)
-    })
-
-    socketService.onPlayerJoined(({ playerNumber: pNum }) => {
-      if (!playerNumber && (pNum === 1 || pNum === 2)) {
+    }
+    
+    const handlePlayerJoined = ({ playerNumber: pNum }: { playerId: string; playerNumber: number }) => {
+      console.log('[useSocket] Player joined with number:', pNum)
+      if (pNum === 1 || pNum === 2) {
         setPlayerNumber(pNum as 1 | 2)
       }
-    })
+    }
+    
+    const handlePlayerLeft = (playerId: string) => {
+      console.log('[useSocket] Player left:', playerId)
+    }
+    
+    // Add all handlers
+    socket.on('connect', handleConnect)
+    socket.on('disconnect', handleDisconnect)
+    socket.on('game-state-update', handleGameStateUpdate)
+    socket.on('player-joined', handlePlayerJoined)
+    socket.on('player-left', handlePlayerLeft)
+    
+    // Check if already connected (in case socket connected before this effect ran)
+    if (socket.connected) {
+      console.log('[useSocket] Socket was already connected')
+      setIsConnected(true)
+    }
 
-    socketService.onPlayerLeft((playerId) => {
-      console.log('Player left:', playerId)
-      // Could show a notification here
-    })
-
-    // Cleanup on unmount
+    // Cleanup: remove all handlers
     return () => {
-      // Only disconnect if this is a real unmount (not StrictMode double-mount)
-      // We'll let the socket stay connected for hot reloading
-      if (import.meta.env.PROD) {
-        socketService.disconnect()
-      }
+      console.log('[useSocket] Cleanup - removing all handlers')
+      socket.off('connect', handleConnect)
+      socket.off('disconnect', handleDisconnect)
+      socket.off('game-state-update', handleGameStateUpdate)
+      socket.off('player-joined', handlePlayerJoined)
+      socket.off('player-left', handlePlayerLeft)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []) // Empty deps - only run once, intentionally ignoring deps
+  }, []) // Empty deps - socket setup only once, handlers use Zustand directly
 
   const createRoom = (callback?: (roomId: string) => void) => {
     socketService.createRoom((newRoomId) => {
@@ -67,12 +94,19 @@ export const useSocket = () => {
     })
   }
 
+  const leaveRoom = () => {
+    console.log('[useSocket] Leaving room...')
+    socketService.leaveRoom()
+    resetGame()  // Reset all game state including roomId
+  }
+
   return {
     createRoom,
     joinRoom,
+    leaveRoom,
     roomId,
     playerNumber,
-    isConnected: socketService.isConnected(),
+    isConnected,
   }
 }
 

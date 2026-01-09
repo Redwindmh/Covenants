@@ -3,11 +3,13 @@ import { useSocket } from '../../hooks/useSocket'
 import { useGameState } from '../../state/gameState'
 
 const RoomManager = () => {
-  const { createRoom, joinRoom, roomId, playerNumber, isConnected } = useSocket()
+  const { createRoom, joinRoom, leaveRoom, roomId, playerNumber, isConnected } = useSocket()
   const { resetGame } = useGameState()
   const [joinRoomId, setJoinRoomId] = useState('')
   const [showJoinForm, setShowJoinForm] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  console.log('[RoomManager] Render:', { roomId, playerNumber, isConnected })
 
   const handleCreateRoom = () => {
     setError(null)
@@ -34,16 +36,42 @@ const RoomManager = () => {
     })
   }
 
+  const handleLeaveRoom = () => {
+    console.log('[RoomManager] Leaving room...')
+    leaveRoom()
+  }
+
+  const copyRoomId = () => {
+    if (roomId) {
+      navigator.clipboard.writeText(roomId)
+      console.log('Room ID copied to clipboard')
+    }
+  }
+
   if (roomId) {
     return (
-      <div className="fixed top-4 right-4 bg-amber-950/90 text-amber-100 p-3 rounded-lg shadow-lg z-50">
-        <div className="text-sm">
-          <div className="font-semibold mb-1">Room: {roomId.substring(0, 8)}...</div>
-          <div>You are Player {playerNumber}</div>
+      <div className="fixed top-4 right-4 bg-amber-950/90 text-amber-100 p-3 rounded-lg shadow-lg z-50 min-w-[280px]">
+        <div className="text-sm mb-2">
+          <div className="font-semibold mb-1">Room ID:</div>
+          <div 
+            className="bg-amber-900/50 p-2 rounded text-xs font-mono break-all cursor-pointer hover:bg-amber-900/70 transition-colors"
+            onClick={copyRoomId}
+            title="Click to copy"
+          >
+            {roomId}
+          </div>
+          <div className="text-xs text-amber-300 mt-1">Click to copy</div>
+          <div className="mt-2">You are Player {playerNumber}</div>
           {!isConnected && (
             <div className="text-red-400 text-xs mt-1">Disconnected</div>
           )}
         </div>
+        <button
+          onClick={handleLeaveRoom}
+          className="w-full bg-red-700 hover:bg-red-600 text-white px-3 py-1.5 rounded text-sm transition-colors"
+        >
+          Leave Room
+        </button>
       </div>
     )
   }

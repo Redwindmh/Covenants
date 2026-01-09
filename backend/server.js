@@ -4,14 +4,32 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import { v4 as uuidv4 } from "uuid";
+import path from "path";
+import { fileURLToPath } from "url";
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173", // Vite default dev server
+    origin: ["http://localhost:5173", "http://localhost:3001"], // Vite dev server and production
     methods: ["GET", "POST"],
   },
+});
+
+// Serve static files from the frontend build
+const frontendDistPath = path.join(__dirname, "../frontend/dist");
+app.use(express.static(frontendDistPath));
+
+// API routes should go here (if any)
+
+// Catch-all route for React Router (SPA)
+// This should be AFTER all API routes but BEFORE socket.io setup
+app.get("*", (req, res) => {
+  res.sendFile(path.join(frontendDistPath, "index.html"));
 });
 
 // Store game rooms and their state
@@ -241,6 +259,32 @@ io.on("connection", (socket) => {
     // Broadcast updated game state
     io.to(roomId).emit("game-state-update", room.gameState);
     console.log(`Player ${playerNumber} drew tile in chaos round, room ${roomId}`);
+  });
+
+  // Handle leaving a room
+  socket.on("leave-room", (roomId) => {
+    console.log(`Player ${socket.id} leaving room ${roomId}`);
+    
+    const room = rooms.get(roomId);
+    if (!room) return;
+    
+    const playerIndex = room.players.indexOf(socket.id);
+    if (playerIndex !== -1) {
+      room.players.splice(playerIndex, 1);
+      delete room.playerNumbers[socket.id];
+      
+      // Leave the socket.io room
+      socket.leave(roomId);
+      
+      // Notify other players
+      socket.to(roomId).emit("player-left", { playerId: socket.id });
+      
+      // Clean up empty rooms
+      if (room.players.length === 0) {
+        rooms.delete(roomId);
+        console.log(`Room ${roomId} deleted (empty)`);
+      }
+    }
   });
 
   // Handle disconnection

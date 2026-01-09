@@ -10,7 +10,7 @@ interface Piece {
 
 const ReadyPlayerOne = () => {
   const dragItem = useRef<string>("")
-  const { playerOneInventory, initializeGame, resetGame, isInitialized, roomId } = useGameState()
+  const { playerOneInventory, initializeGame, resetGame, isInitialized, roomId, playerNumber } = useGameState()
 
   const generatePieces = useCallback(() => {
     // Base rules: 21 tiles total = 4 of each element + 1 UNKNOWN
@@ -72,13 +72,31 @@ const ReadyPlayerOne = () => {
   }, [roomId, initializeGame])
 
   useEffect(() => {
+    console.log('[ReadyPlayerOne] useEffect running:', { isInitialized, playerNumber, roomId })
+    
     // Only initialize if not already initialized
-    if (!isInitialized) {
-      generatePieces()
+    if (isInitialized) {
+      console.log('[ReadyPlayerOne] Already initialized, skipping piece generation')
+      return
     }
+    
+    // If in a multiplayer room as Player 2, don't generate pieces - wait for server state
+    if (roomId && playerNumber === 2) {
+      console.log('[ReadyPlayerOne] Player 2 in room - waiting for server state, not generating pieces')
+      return
+    }
+    
+    // Generate pieces if:
+    // - Single player (no roomId)
+    // - Or Player 1 in multiplayer room
+    // - Or playerNumber not yet assigned (will sync later)
+    console.log('[ReadyPlayerOne] Generating pieces...')
+    generatePieces()
+    console.log('[ReadyPlayerOne] Pieces generated!')
 
     // Reset game when page is refreshed/closed
     const handleBeforeUnload = () => {
+      console.log('[ReadyPlayerOne] beforeunload - resetting game')
       resetGame()
     }
 
@@ -86,7 +104,7 @@ const ReadyPlayerOne = () => {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload)
     }
-  }, [isInitialized, resetGame, generatePieces])
+  }, [isInitialized, resetGame, generatePieces, playerNumber, roomId])
 
   const dragStart = (e: React.DragEvent<HTMLImageElement>) => {
     dragItem.current = e.currentTarget.id

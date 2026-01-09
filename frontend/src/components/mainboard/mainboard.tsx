@@ -33,6 +33,8 @@ const MainBoard = () => {
     setGameStatus,
     setCurrentPlayer,
     addTileToInventory,
+    resetGame,
+    isInitialized,
     roomId
   } = useGameState()
   
@@ -130,14 +132,8 @@ const MainBoard = () => {
             playerOneScore: endResult.playerOneScore,
             playerTwoScore: endResult.playerTwoScore,
           })
-        } else {
-          // Update scores
-          const scores = calculateScores(territoryControl)
-          setGameStatus({
-            playerOneScore: scores.playerOneScore,
-            playerTwoScore: scores.playerTwoScore,
-          })
         }
+        // Note: Live scores are calculated via useMemo, no need to update state
       }, 100)
       
       showNotice(false)
@@ -253,6 +249,11 @@ const MainBoard = () => {
     }
   }, [shouldShowChaosModal, showChaosModal])
 
+  // Calculate live scores based on territory control (derived, no state updates)
+  const liveScores = useMemo(() => {
+    return calculateScores(territoryControl)
+  }, [territoryControl])
+
   // Check if player can place on current territory
   const canPlace = useMemo(() => {
     const currentPlayerInventory = currentPlayer === 1 ? playerOneInventory : playerTwoInventory
@@ -273,7 +274,23 @@ const MainBoard = () => {
 
   // Check for game end on turn change
   useEffect(() => {
-    if (gameStatus.gameEnded) return
+    console.log('[MainBoard] Game end check effect running:', {
+      isInitialized,
+      gameEnded: gameStatus.gameEnded,
+      p1Inventory: playerOneInventory.length,
+      p2Inventory: playerTwoInventory.length,
+      currentPlayer
+    })
+    
+    // Don't check for game end if game hasn't been initialized yet
+    if (!isInitialized) {
+      console.log('[MainBoard] Skipping - not initialized yet')
+      return
+    }
+    if (gameStatus.gameEnded) {
+      console.log('[MainBoard] Skipping - game already ended')
+      return
+    }
 
     const endResult = checkGameEnd(
       gameStatus,
@@ -284,21 +301,21 @@ const MainBoard = () => {
       currentPlayer
     )
 
+    console.log('[MainBoard] checkGameEnd result:', endResult)
+
     if (endResult.gameEnded) {
+      console.log('[MainBoard] Setting game as ended!')
       setGameStatus({
         gameEnded: true,
         winner: endResult.winner || null,
         playerOneScore: endResult.playerOneScore,
         playerTwoScore: endResult.playerTwoScore,
       })
-    } else {
-      const scores = calculateScores(territoryControl)
-      setGameStatus({
-        playerOneScore: scores.playerOneScore,
-        playerTwoScore: scores.playerTwoScore,
-      })
     }
-  }, [currentPlayer, playerOneInventory, playerTwoInventory, boardState, territoryControl, gameStatus, setGameStatus])
+    // Note: Removed the else branch that was updating scores on every render
+    // Scores are calculated in checkGameEnd and only set when game ends
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isInitialized, currentPlayer, playerOneInventory, playerTwoInventory, boardState, territoryControl, gameStatus.gameEnded, gameStatus.currentTerritoryIndex])
 
   // Sync board state from server/local state
   useEffect(() => {
@@ -362,7 +379,16 @@ const MainBoard = () => {
   }
 
   const handleNewGame = () => {
-    window.location.reload() // Simple reset for now
+    // Disconnect from current room and clear all state
+    if (roomId && socketService.isConnected()) {
+      socketService.disconnect()
+    }
+    
+    // Clear all local state
+    resetGame()
+    
+    // Reload to start fresh
+    window.location.reload()
   }
 
   return (
@@ -387,7 +413,10 @@ const MainBoard = () => {
       <GameEndModal
         isOpen={gameStatus.gameEnded}
         gameStatus={gameStatus}
-        onClose={() => {}}
+        onClose={() => {
+          // Close the modal but stay in ended state
+          // User can still see the board
+        }}
         onNewGame={handleNewGame}
       />
       
@@ -404,8 +433,8 @@ const MainBoard = () => {
             )}
           </div>
           <div className="flex gap-4 text-amber-200 text-sm">
-            <span>P1: {gameStatus.playerOneScore}pts</span>
-            <span>P2: {gameStatus.playerTwoScore}pts</span>
+            <span>P1: {liveScores.playerOneScore}pts</span>
+            <span>P2: {liveScores.playerTwoScore}pts</span>
           </div>
         </div>
         
