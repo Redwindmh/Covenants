@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { Territory, TERRITORIES } from '../constants/gameRules'
+import { Territory, TERRITORIES, getElementFromPieceId } from '../constants/gameRules'
 
 export interface BoardPosition {
   x: number
@@ -55,6 +55,7 @@ interface GameState {
   setRoomId: (roomId: string) => void
   setCurrentPlayer: (player: 1 | 2) => void
   setGameStatus: (status: Partial<GameStatus>) => void
+  addTileToInventory: (player: 1 | 2, tileId: string) => void
   resetGame: () => void
   isInitialized: boolean
 }
@@ -118,10 +119,12 @@ export const useGameState = create<GameState>((set) => ({
           pieces: [],
         }
         
+        // Use resolved element if provided, otherwise extract from pieceId
+        const element = resolvedElement || getElementFromPieceId(pieceId)
         currentControl.pieces.push({
           pieceId,
           playerNumber: player,
-          element: resolvedElement || pieceId.split('-')[0],
+          element: element,
         })
         
         // Determine control based on top piece
@@ -218,6 +221,16 @@ export const useGameState = create<GameState>((set) => ({
   setGameStatus: (status: Partial<GameStatus>) => 
     set((state) => ({
       gameStatus: { ...state.gameStatus, ...status }
+    })),
+  
+  addTileToInventory: (player: 1 | 2, tileId: string) =>
+    set((state) => ({
+      playerOneInventory: player === 1 
+        ? [...state.playerOneInventory, tileId]
+        : state.playerOneInventory,
+      playerTwoInventory: player === 2
+        ? [...state.playerTwoInventory, tileId]
+        : state.playerTwoInventory,
     })),
   
   resetGame: () => set(() => ({

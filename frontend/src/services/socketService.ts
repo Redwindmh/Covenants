@@ -100,7 +100,7 @@ class SocketService {
     this.socket.on('player-left', callback)
   }
 
-  emitPiecePlaced(pieceId: string, position: { x: number; y: number }, playerNumber: number): void {
+  emitPiecePlaced(pieceId: string, position: { x: number; y: number }, playerNumber: number, resolvedElement?: string): void {
     if (!this.socket || !this.roomId) {
       console.error('Socket not connected or no room joined')
       return
@@ -111,6 +111,7 @@ class SocketService {
       pieceId,
       position,
       playerNumber,
+      resolvedElement,
     })
   }
 
@@ -125,6 +126,32 @@ class SocketService {
       playerOnePieces,
       playerTwoPieces,
       leftoverTiles,
+    })
+  }
+
+  emitTerritoryForfeit(territoryId: number, forfeitingPlayer: number): void {
+    if (!this.socket || !this.roomId) {
+      console.error('Socket not connected or no room joined')
+      return
+    }
+
+    this.socket.emit('territory-forfeit', {
+      roomId: this.roomId,
+      territoryId,
+      forfeitingPlayer,
+    })
+  }
+
+  emitChaosDraw(tileId: string, playerNumber: number): void {
+    if (!this.socket || !this.roomId) {
+      console.error('Socket not connected or no room joined')
+      return
+    }
+
+    this.socket.emit('chaos-draw', {
+      roomId: this.roomId,
+      playerNumber,
+      tileId,
     })
   }
 

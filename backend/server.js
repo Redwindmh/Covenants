@@ -25,7 +25,17 @@ const rooms = new Map();
 //     playerOneInventory: [],
 //     playerTwoInventory: [],
 //     boardState: {},
+//     territoryControl: {},
 //     currentPlayer: 1,
+//     gameStatus: {
+//       currentTerritoryIndex: 0,
+//       gameEnded: false,
+//       winner: null,
+//       playerOneScore: 0,
+//       playerTwoScore: 0,
+//       chaosRoundActive: false,
+//       leftoverTiles: [],
+//     }
 //   }
 // }
 
@@ -42,7 +52,17 @@ io.on("connection", (socket) => {
         playerOneInventory: [],
         playerTwoInventory: [],
         boardState: {},
+        territoryControl: {},
         currentPlayer: 1,
+        gameStatus: {
+          currentTerritoryIndex: 0,
+          gameEnded: false,
+          winner: null,
+          playerOneScore: 0,
+          playerTwoScore: 0,
+          chaosRoundActive: false,
+          leftoverTiles: [],
+        },
       },
     });
     socket.join(roomId);
@@ -83,15 +103,35 @@ io.on("connection", (socket) => {
   });
 
   // Handle game initialization
-  socket.on("game-initialized", ({ roomId, playerOnePieces, playerTwoPieces }) => {
+  socket.on("game-initialized", ({ roomId, playerOnePieces, playerTwoPieces, leftoverTiles }) => {
     const room = rooms.get(roomId);
     if (!room) return;
+
+    // Initialize territory control (7 territories)
+    const territoryControl = {};
+    for (let i = 1; i <= 7; i++) {
+      territoryControl[i] = {
+        territoryId: i,
+        controlledBy: null,
+        pieces: [],
+      };
+    }
 
     room.gameState = {
       playerOneInventory: playerOnePieces,
       playerTwoInventory: playerTwoPieces,
       boardState: {},
+      territoryControl,
       currentPlayer: 1,
+      gameStatus: {
+        currentTerritoryIndex: 0,
+        gameEnded: false,
+        winner: null,
+        playerOneScore: 0,
+        playerTwoScore: 0,
+        chaosRoundActive: false,
+        leftoverTiles: leftoverTiles || [],
+      },
     };
 
     // Broadcast to all players in the room
@@ -100,7 +140,7 @@ io.on("connection", (socket) => {
   });
 
   // Handle piece placement
-  socket.on("piece-placed", ({ roomId, pieceId, position, playerNumber }) => {
+  socket.on("piece-placed", ({ roomId, pieceId, position, playerNumber, resolvedElement }) => {
     const room = rooms.get(roomId);
     if (!room) return;
 
@@ -117,7 +157,12 @@ io.on("connection", (socket) => {
       y: position.y,
       pieceId,
       playerNumber,
+      element: resolvedElement,
     };
+
+    // Update territory control (simplified - would need territory detection logic)
+    // For now, we'll let the frontend handle territory control updates
+    // and sync them back
 
     // Remove piece from inventory
     if (playerNumber === 1) {
@@ -136,6 +181,66 @@ io.on("connection", (socket) => {
     // Broadcast updated game state to all players in the room
     io.to(roomId).emit("game-state-update", room.gameState);
     console.log(`Piece placed in room ${roomId} by Player ${playerNumber}`);
+  });
+
+  // Handle territory forfeit
+  socket.on("territory-forfeit", ({ roomId, territoryId, forfeitingPlayer }) => {
+    const room = rooms.get(roomId);
+    if (!room) return;
+
+    if (room.gameState.currentPlayer !== forfeitingPlayer) {
+      socket.emit("invalid-move", { reason: "Not your turn" });
+      return;
+    }
+
+    // Update territory control
+    if (!room.gameState.territoryControl[territoryId]) {
+      room.gameState.territoryControl[territoryId] = {
+        territoryId,
+        controlledBy: null,
+        pieces: [],
+      };
+    }
+
+    const opponent = forfeitingPlayer === 1 ? 2 : 1;
+    room.gameState.territoryControl[territoryId].controlledBy = opponent;
+    room.gameState.territoryControl[territoryId].controlCoin = opponent === 1 ? 'tree_coin' : 'eye_coin';
+
+    // Advance to next territory
+    if (room.gameState.gameStatus.currentTerritoryIndex < 6) {
+      room.gameState.gameStatus.currentTerritoryIndex += 1;
+    }
+
+    // Switch turns
+    room.gameState.currentPlayer = opponent;
+
+    // Broadcast updated game state
+    io.to(roomId).emit("game-state-update", room.gameState);
+    console.log(`Territory ${territoryId} forfeited by Player ${forfeitingPlayer} in room ${roomId}`);
+  });
+
+  // Handle chaos round draw
+  socket.on("chaos-draw", ({ roomId, playerNumber, tileId }) => {
+    const room = rooms.get(roomId);
+    if (!room) return;
+
+    // Remove tile from leftover tiles
+    room.gameState.gameStatus.leftoverTiles = room.gameState.gameStatus.leftoverTiles.filter(
+      (t) => t !== tileId
+    );
+
+    // Add to player inventory
+    if (playerNumber === 1) {
+      room.gameState.playerOneInventory.push(tileId);
+    } else {
+      room.gameState.playerTwoInventory.push(tileId);
+    }
+
+    room.gameState.gameStatus.chaosRoundActive = true;
+
+    // Broadcast updated game state
+    io.to(roomId).emit("game-state-update", room.gameState);
+    console.log(`Player ${playerNumber} drew tile in chaos round, room ${roomId}`);
   });
 
   // Handle disconnection
