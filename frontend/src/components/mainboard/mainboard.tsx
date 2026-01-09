@@ -106,11 +106,10 @@ const MainBoard = () => {
         target.appendChild(droppedPiece)
       }
       
-      // Advance to next territory if this territory is complete
-      const territory = getTerritoryForCell(position.x, position.y)
-      if (territory && gameStatus.currentTerritoryIndex < 6) {
-        setGameStatus({ currentTerritoryIndex: gameStatus.currentTerritoryIndex + 1 })
-      }
+      // Note: Territory advancement should be handled by game rules
+      // A territory is "complete" when a piece is placed on it and control is determined
+      // For now, we advance after each placement, but this might need adjustment
+      // based on whether the territory is actually "claimed" or just has a piece on it
       
       // Check for game end after placement
       setTimeout(() => {

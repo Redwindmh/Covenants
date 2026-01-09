@@ -52,30 +52,33 @@ export function validatePlacement(
     return { valid: true }
   }
 
-  // If placing on occupied territory, must beat the top piece
-  const topPiece = territoryControlInfo?.pieces[territoryControlInfo.pieces.length - 1]
-  if (!topPiece) {
-    return { valid: true } // Shouldn't happen, but safe fallback
+  // If placing on occupied cell, must beat the piece on that specific cell
+  // Check if placing on own piece (not allowed - must be opponent's piece)
+  if (existingPosition.playerNumber === player) {
+    return { valid: false, reason: 'Cannot place on your own piece' }
   }
 
-  const topElement = getElementFromPieceId(topPiece.pieceId)
+  // Use resolved element if available (for UNKNOWN tiles), otherwise extract from pieceId
+  const existingElement = existingPosition.element 
+    ? (existingPosition.element as Element)
+    : getElementFromPieceId(existingPosition.pieceId || '')
   const placingElement = getElementFromPieceId(pieceId)
 
   // If placing UNKNOWN on opponent piece, must be the element that beats it
   if (placingElement === Element.UNKNOWN) {
-    const requiredElement = getBeatingElement(topElement)
+    const requiredElement = getBeatingElement(existingElement)
     if (!requiredElement) {
       return { valid: false, reason: 'Cannot determine required element' }
     }
     return { valid: true, requiresUnknownSelection: true, requiredElement }
   }
 
-  // Check if placing element beats the top element
-  if (elementBeats(placingElement, topElement)) {
+  // Check if placing element beats the existing element
+  if (elementBeats(placingElement, existingElement)) {
     return { valid: true }
   }
 
-  return { valid: false, reason: `${placingElement} cannot beat ${topElement}` }
+  return { valid: false, reason: `${placingElement} cannot beat ${existingElement}` }
 }
 
 /**
@@ -102,18 +105,24 @@ export function canPlaceOnCurrentTerritory(
       return true
     }
 
-    // If occupied, check if player has a piece that can beat it
-    const topPiece = territoryControlInfo?.pieces[territoryControlInfo.pieces.length - 1]
-    if (topPiece) {
-      const topElement = getElementFromPieceId(topPiece.pieceId)
+    // If occupied, check if it's opponent's piece and if player has a piece that can beat it
+    if (existingPosition.playerNumber && existingPosition.playerNumber !== player) {
+      // Use resolved element if available (for UNKNOWN tiles)
+      const existingElement = existingPosition.element 
+        ? (existingPosition.element as Element)
+        : getElementFromPieceId(existingPosition.pieceId || '')
       
       // Check if player has any piece that can beat it
       for (const pieceId of playerInventory) {
         const element = getElementFromPieceId(pieceId)
-        if (element === Element.UNKNOWN || elementBeats(element, topElement)) {
+        if (element === Element.UNKNOWN || elementBeats(element, existingElement)) {
           return true
         }
       }
+    } else if (existingPosition.playerNumber === player) {
+      // Can't place on own piece, but might be able to place on empty cell in same territory
+      // Continue checking other cells
+      continue
     }
   }
 

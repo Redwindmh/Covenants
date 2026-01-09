@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { Territory, TERRITORIES } from '../constants/gameRules'
+import { Territory, TERRITORIES, getElementFromPieceId } from '../constants/gameRules'
 
 export interface BoardPosition {
   x: number
@@ -119,10 +119,12 @@ export const useGameState = create<GameState>((set) => ({
           pieces: [],
         }
         
+        // Use resolved element if provided, otherwise extract from pieceId
+        const element = resolvedElement || getElementFromPieceId(pieceId)
         currentControl.pieces.push({
           pieceId,
           playerNumber: player,
-          element: resolvedElement || pieceId.split('-')[0],
+          element: element,
         })
         
         // Determine control based on top piece
