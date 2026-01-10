@@ -7,6 +7,7 @@ export const useSocket = () => {
     syncGameState, 
     setPlayerNumber, 
     setRoomId, 
+    setOpponentJoined,
     resetGame,
     playerNumber,
     roomId 
@@ -38,15 +39,24 @@ export const useSocket = () => {
       syncGameState(gameState)
     }
     
-    const handlePlayerJoined = ({ playerNumber: pNum }: { playerId: string; playerNumber: number }) => {
-      console.log('[useSocket] Player joined with number:', pNum)
-      if (pNum === 1 || pNum === 2) {
-        setPlayerNumber(pNum as 1 | 2)
+    const handlePlayerJoined = ({ playerId, playerNumber: pNum }: { playerId: string; playerNumber: number }) => {
+      console.log('[useSocket] Player joined event received:', { playerId, playerNumber: pNum })
+      
+      // This event is sent to ALL players in the room when someone joins
+      // We should NOT set our own playerNumber here - that's done in createRoom/joinRoom
+      // We only use this to know that an opponent has joined
+      
+      // If player 2 joined, the opponent is now in the room (for Player 1's perspective)
+      if (pNum === 2) {
+        console.log('[useSocket] Player 2 joined - setting opponentJoined = true')
+        setOpponentJoined(true)
       }
     }
     
     const handlePlayerLeft = (playerId: string) => {
       console.log('[useSocket] Player left:', playerId)
+      // Opponent left the room
+      setOpponentJoined(false)
     }
     
     // Add all handlers
@@ -83,12 +93,23 @@ export const useSocket = () => {
   }
 
   const joinRoom = (roomIdToJoin: string, callback?: (success: boolean) => void) => {
+    // Set roomId optimistically to prevent piece regeneration during async join
+    console.log('[useSocket] Setting roomId optimistically:', roomIdToJoin)
+    setRoomId(roomIdToJoin)
+    
     socketService.joinRoom(roomIdToJoin, (success, data) => {
       if (success && data && (data.playerNumber === 1 || data.playerNumber === 2)) {
-        setRoomId(roomIdToJoin)
         setPlayerNumber(data.playerNumber as 1 | 2)
+        // If we're Player 2, we're joining an existing room with Player 1
+        if (data.playerNumber === 2) {
+          console.log('[useSocket] Joined as Player 2 - opponent (Player 1) is in the room')
+          setOpponentJoined(true)
+        }
         callback?.(true)
       } else {
+        // Revert roomId on failure
+        console.log('[useSocket] Join failed, reverting roomId')
+        setRoomId(null)
         callback?.(false)
       }
     })

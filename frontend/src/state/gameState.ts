@@ -39,6 +39,7 @@ interface GameState {
   playerNumber: 1 | 2 | null // Which player this client is
   roomId: string | null
   gameStatus: GameStatus
+  opponentJoined: boolean // True when both players are in the room
   removeFromInventory: (player: 1 | 2, piece: string) => void
   placePiece: (pieceId: string, position: { x: number; y: number }, player: 1 | 2, resolvedElement?: string) => void
   forfeitTerritory: (territoryId: number, forfeitingPlayer: 1 | 2) => void
@@ -52,10 +53,11 @@ interface GameState {
     gameStatus?: GameStatus
   }) => void
   setPlayerNumber: (playerNumber: 1 | 2) => void
-  setRoomId: (roomId: string) => void
+  setRoomId: (roomId: string | null) => void
   setCurrentPlayer: (player: 1 | 2) => void
   setGameStatus: (status: Partial<GameStatus>) => void
   addTileToInventory: (player: 1 | 2, tileId: string) => void
+  setOpponentJoined: (joined: boolean) => void
   resetGame: () => void
   isInitialized: boolean
 }
@@ -80,6 +82,7 @@ export const useGameState = create<GameState>((set) => ({
   roomId: null,
   gameStatus: initialGameStatus,
   isInitialized: false,
+  opponentJoined: false,
   
   removeFromInventory: (player: 1 | 2, piece: string) => 
     set((state) => ({
@@ -240,7 +243,7 @@ export const useGameState = create<GameState>((set) => ({
   },
   
   setPlayerNumber: (playerNumber: 1 | 2) => set(() => ({ playerNumber })),
-  setRoomId: (roomId: string) => set(() => ({ roomId })),
+  setRoomId: (roomId: string | null) => set(() => ({ roomId })),
   setCurrentPlayer: (player: 1 | 2) => set(() => ({ currentPlayer: player })),
   setGameStatus: (status: Partial<GameStatus>) => 
     set((state) => ({
@@ -257,6 +260,8 @@ export const useGameState = create<GameState>((set) => ({
         : state.playerTwoInventory,
     })),
   
+  setOpponentJoined: (joined: boolean) => set(() => ({ opponentJoined: joined })),
+  
   resetGame: () => set(() => ({
     playerOneInventory: [],
     playerTwoInventory: [],
@@ -267,5 +272,6 @@ export const useGameState = create<GameState>((set) => ({
     roomId: null,
     gameStatus: initialGameStatus,
     isInitialized: false,
+    opponentJoined: false,
   })),
 }))

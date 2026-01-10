@@ -129,17 +129,32 @@ export function canPlaceOnCurrentTerritory(
 
 /**
  * Get all valid placement positions for the current territory
+ * Returns cells that are either empty or have an opponent's piece that can be challenged
  */
 export function getValidPlacementPositions(
   currentTerritoryIndex: number,
-  _boardState: Map<string, BoardPosition>
+  boardState: Map<string, BoardPosition>,
+  player: 1 | 2
 ): Array<{ x: number; y: number }> {
   const territory = TERRITORIES[currentTerritoryIndex]
   if (!territory) return []
 
-  return territory.cells.filter(_cell => {
-    // Valid if empty or if we can place on top (will be validated separately)
-    return true
+  return territory.cells.filter(cell => {
+    const key = `${cell.x},${cell.y}`
+    const existingPosition = boardState.get(key)
+    
+    // Empty cell - valid placement
+    if (!existingPosition || !existingPosition.pieceId) {
+      return true
+    }
+    
+    // Occupied by opponent - can challenge (actual element check happens in validatePlacement)
+    if (existingPosition.playerNumber !== player) {
+      return true
+    }
+    
+    // Occupied by self - cannot place here
+    return false
   })
 }
 

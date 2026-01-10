@@ -4,12 +4,15 @@ import { useGameState } from '../../state/gameState'
 
 const RoomManager = () => {
   const { createRoom, joinRoom, leaveRoom, roomId, playerNumber, isConnected } = useSocket()
-  const { resetGame } = useGameState()
+  const { resetGame, opponentJoined } = useGameState()
   const [joinRoomId, setJoinRoomId] = useState('')
   const [showJoinForm, setShowJoinForm] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  console.log('[RoomManager] Render:', { roomId, playerNumber, isConnected })
+  // Both players are ready when opponent has joined
+  const bothPlayersReady = roomId && opponentJoined
+
+  console.log('[RoomManager] Render:', { roomId, playerNumber, isConnected, opponentJoined, bothPlayersReady })
 
   const handleCreateRoom = () => {
     setError(null)
@@ -25,7 +28,8 @@ const RoomManager = () => {
       return
     }
     setError(null)
-    resetGame()
+    // Don't call resetGame() here - the optimistic roomId will prevent piece regeneration
+    // and the server state will overwrite local state when we receive it
     joinRoom(joinRoomId.trim(), (success) => {
       if (!success) {
         setError('Failed to join room. Room may not exist or be full.')
@@ -48,11 +52,34 @@ const RoomManager = () => {
     }
   }
 
+  // Bottom bar when both players are in the game
+  if (bothPlayersReady) {
+    return (
+      <div className="fixed bottom-0 left-0 right-0 bg-amber-950/95 text-amber-100 px-4 py-2 shadow-lg z-50 flex items-center justify-between">
+        <div className="flex items-center gap-4 text-sm">
+          <span className="font-semibold">Multiplayer Game</span>
+          <span className="text-amber-300">You are Player {playerNumber}</span>
+          {!isConnected && (
+            <span className="text-red-400">Disconnected</span>
+          )}
+        </div>
+        <button
+          onClick={handleLeaveRoom}
+          className="bg-red-700 hover:bg-red-600 text-white px-4 py-1 rounded text-sm transition-colors"
+        >
+          Leave Game
+        </button>
+      </div>
+    )
+  }
+
+  // Waiting for opponent - show room info in corner
   if (roomId) {
     return (
       <div className="fixed top-4 right-4 bg-amber-950/90 text-amber-100 p-3 rounded-lg shadow-lg z-50 min-w-[280px]">
         <div className="text-sm mb-2">
-          <div className="font-semibold mb-1">Room ID:</div>
+          <div className="font-semibold mb-1">Waiting for opponent...</div>
+          <div className="text-xs text-amber-300 mb-2">Share this Room ID:</div>
           <div 
             className="bg-amber-900/50 p-2 rounded text-xs font-mono break-all cursor-pointer hover:bg-amber-900/70 transition-colors"
             onClick={copyRoomId}

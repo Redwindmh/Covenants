@@ -28,7 +28,8 @@ app.use(express.static(frontendDistPath));
 
 // Catch-all route for React Router (SPA)
 // This should be AFTER all API routes but BEFORE socket.io setup
-app.get("*", (req, res) => {
+// Note: Express 5.x requires named wildcard parameters
+app.get("/{*splat}", (req, res) => {
   res.sendFile(path.join(frontendDistPath, "index.html"));
 });
 

@@ -87,69 +87,123 @@ export interface Territory {
 }
 
 // Base rules: First 5 territories = 1 point each, 6th = 2 points, 7th = 3 points
+// Territory cells are mapped to the visual board positions (8x8 grid)
+// TODO: Fill in cells after user clicks to map territories
 export const TERRITORIES: Territory[] = [
   {
     id: 1,
     pointValue: 1,
     name: 'dawn',
-    // Approximate spiral positions - will need adjustment based on actual board
+    // Bottom "1" territory - mapped from user clicks
     cells: [
-      { x: 2, y: 2 }, { x: 3, y: 2 }, { x: 2, y: 3 }, { x: 3, y: 3 },
-      { x: 1, y: 2 }, { x: 2, y: 1 }, { x: 3, y: 1 }, { x: 4, y: 2 },
+      // Row 22
+      { x: 5, y: 22 }, { x: 6, y: 22 }, { x: 7, y: 22 },
+      // Row 23
+      { x: 4, y: 23 }, { x: 5, y: 23 }, { x: 6, y: 23 }, { x: 7, y: 23 }, { x: 8, y: 23 }, { x: 9, y: 23 },
+      // Row 24
+      { x: 4, y: 24 }, { x: 5, y: 24 }, { x: 6, y: 24 }, { x: 7, y: 24 }, { x: 8, y: 24 }, { x: 9, y: 24 }, { x: 10, y: 24 }, { x: 11, y: 24 },
+      // Row 25
+      { x: 5, y: 25 }, { x: 6, y: 25 }, { x: 7, y: 25 }, { x: 8, y: 25 }, { x: 9, y: 25 }, { x: 10, y: 25 }, { x: 11, y: 25 }, { x: 12, y: 25 }, { x: 13, y: 25 },
+      // Row 26
+      { x: 5, y: 26 }, { x: 6, y: 26 }, { x: 7, y: 26 }, { x: 8, y: 26 }, { x: 9, y: 26 }, { x: 10, y: 26 }, { x: 11, y: 26 }, { x: 12, y: 26 }, { x: 13, y: 26 }, { x: 14, y: 26 }, { x: 15, y: 26 },
+      // Row 27
+      { x: 6, y: 27 }, { x: 7, y: 27 }, { x: 8, y: 27 }, { x: 9, y: 27 }, { x: 10, y: 27 }, { x: 11, y: 27 }, { x: 12, y: 27 }, { x: 13, y: 27 }, { x: 14, y: 27 }, { x: 15, y: 27 },
+      // Row 28
+      { x: 7, y: 28 }, { x: 8, y: 28 }, { x: 9, y: 28 }, { x: 10, y: 28 }, { x: 11, y: 28 }, { x: 12, y: 28 }, { x: 13, y: 28 }, { x: 14, y: 28 }, { x: 15, y: 28 },
+      // Row 29
+      { x: 10, y: 29 }, { x: 11, y: 29 }, { x: 12, y: 29 }, { x: 13, y: 29 }, { x: 14, y: 29 }, { x: 15, y: 29 },
+      // Row 30
+      { x: 13, y: 30 }, { x: 14, y: 30 },
     ],
   },
   {
     id: 2,
     pointValue: 1,
     name: 'territory-2',
+    // Left "1" territory - estimated based on board layout
     cells: [
-      { x: 5, y: 2 }, { x: 6, y: 2 }, { x: 5, y: 3 }, { x: 6, y: 3 },
-      { x: 4, y: 3 }, { x: 5, y: 1 }, { x: 6, y: 1 }, { x: 7, y: 2 },
+      // Rows 12-18, roughly x: 2-8
+      { x: 3, y: 12 }, { x: 4, y: 12 }, { x: 5, y: 12 },
+      { x: 2, y: 13 }, { x: 3, y: 13 }, { x: 4, y: 13 }, { x: 5, y: 13 }, { x: 6, y: 13 },
+      { x: 2, y: 14 }, { x: 3, y: 14 }, { x: 4, y: 14 }, { x: 5, y: 14 }, { x: 6, y: 14 }, { x: 7, y: 14 },
+      { x: 2, y: 15 }, { x: 3, y: 15 }, { x: 4, y: 15 }, { x: 5, y: 15 }, { x: 6, y: 15 }, { x: 7, y: 15 },
+      { x: 2, y: 16 }, { x: 3, y: 16 }, { x: 4, y: 16 }, { x: 5, y: 16 }, { x: 6, y: 16 }, { x: 7, y: 16 },
+      { x: 2, y: 17 }, { x: 3, y: 17 }, { x: 4, y: 17 }, { x: 5, y: 17 }, { x: 6, y: 17 },
+      { x: 3, y: 18 }, { x: 4, y: 18 }, { x: 5, y: 18 },
     ],
   },
   {
     id: 3,
     pointValue: 1,
     name: 'territory-3',
+    // Upper-left "1" territory - estimated based on board layout
     cells: [
-      { x: 8, y: 2 }, { x: 9, y: 2 }, { x: 8, y: 3 }, { x: 9, y: 3 },
-      { x: 7, y: 3 }, { x: 8, y: 1 }, { x: 9, y: 1 }, { x: 10, y: 2 },
+      { x: 7, y: 4 }, { x: 8, y: 4 }, { x: 9, y: 4 },
+      { x: 6, y: 5 }, { x: 7, y: 5 }, { x: 8, y: 5 }, { x: 9, y: 5 }, { x: 10, y: 5 },
+      { x: 5, y: 6 }, { x: 6, y: 6 }, { x: 7, y: 6 }, { x: 8, y: 6 }, { x: 9, y: 6 }, { x: 10, y: 6 }, { x: 11, y: 6 },
+      { x: 5, y: 7 }, { x: 6, y: 7 }, { x: 7, y: 7 }, { x: 8, y: 7 }, { x: 9, y: 7 }, { x: 10, y: 7 }, { x: 11, y: 7 },
+      { x: 5, y: 8 }, { x: 6, y: 8 }, { x: 7, y: 8 }, { x: 8, y: 8 }, { x: 9, y: 8 }, { x: 10, y: 8 }, { x: 11, y: 8 },
+      { x: 6, y: 9 }, { x: 7, y: 9 }, { x: 8, y: 9 }, { x: 9, y: 9 }, { x: 10, y: 9 },
+      { x: 7, y: 10 }, { x: 8, y: 10 }, { x: 9, y: 10 },
     ],
   },
   {
     id: 4,
     pointValue: 1,
     name: 'territory-4',
+    // Upper-right "1" territory - estimated based on board layout
     cells: [
-      { x: 11, y: 2 }, { x: 12, y: 2 }, { x: 11, y: 3 }, { x: 12, y: 3 },
-      { x: 10, y: 3 }, { x: 11, y: 1 }, { x: 12, y: 1 }, { x: 13, y: 2 },
+      { x: 22, y: 4 }, { x: 23, y: 4 }, { x: 24, y: 4 },
+      { x: 21, y: 5 }, { x: 22, y: 5 }, { x: 23, y: 5 }, { x: 24, y: 5 }, { x: 25, y: 5 },
+      { x: 20, y: 6 }, { x: 21, y: 6 }, { x: 22, y: 6 }, { x: 23, y: 6 }, { x: 24, y: 6 }, { x: 25, y: 6 }, { x: 26, y: 6 },
+      { x: 20, y: 7 }, { x: 21, y: 7 }, { x: 22, y: 7 }, { x: 23, y: 7 }, { x: 24, y: 7 }, { x: 25, y: 7 }, { x: 26, y: 7 },
+      { x: 20, y: 8 }, { x: 21, y: 8 }, { x: 22, y: 8 }, { x: 23, y: 8 }, { x: 24, y: 8 }, { x: 25, y: 8 }, { x: 26, y: 8 },
+      { x: 21, y: 9 }, { x: 22, y: 9 }, { x: 23, y: 9 }, { x: 24, y: 9 }, { x: 25, y: 9 },
+      { x: 22, y: 10 }, { x: 23, y: 10 }, { x: 24, y: 10 },
     ],
   },
   {
     id: 5,
     pointValue: 1,
     name: 'territory-5',
+    // Right "1" territory - estimated based on board layout
     cells: [
-      { x: 13, y: 3 }, { x: 13, y: 4 }, { x: 13, y: 5 }, { x: 12, y: 4 },
-      { x: 12, y: 5 }, { x: 11, y: 4 }, { x: 11, y: 5 }, { x: 10, y: 4 },
+      { x: 26, y: 12 }, { x: 27, y: 12 }, { x: 28, y: 12 },
+      { x: 25, y: 13 }, { x: 26, y: 13 }, { x: 27, y: 13 }, { x: 28, y: 13 }, { x: 29, y: 13 },
+      { x: 24, y: 14 }, { x: 25, y: 14 }, { x: 26, y: 14 }, { x: 27, y: 14 }, { x: 28, y: 14 }, { x: 29, y: 14 },
+      { x: 24, y: 15 }, { x: 25, y: 15 }, { x: 26, y: 15 }, { x: 27, y: 15 }, { x: 28, y: 15 }, { x: 29, y: 15 },
+      { x: 24, y: 16 }, { x: 25, y: 16 }, { x: 26, y: 16 }, { x: 27, y: 16 }, { x: 28, y: 16 }, { x: 29, y: 16 },
+      { x: 25, y: 17 }, { x: 26, y: 17 }, { x: 27, y: 17 }, { x: 28, y: 17 }, { x: 29, y: 17 },
+      { x: 26, y: 18 }, { x: 27, y: 18 }, { x: 28, y: 18 },
     ],
   },
   {
     id: 6,
     pointValue: 2,
     name: 'territory-6',
+    // Right "2" territory - estimated based on board layout
     cells: [
-      { x: 9, y: 4 }, { x: 9, y: 5 }, { x: 8, y: 4 }, { x: 8, y: 5 },
-      { x: 7, y: 4 }, { x: 7, y: 5 }, { x: 6, y: 4 }, { x: 6, y: 5 },
+      { x: 24, y: 20 }, { x: 25, y: 20 }, { x: 26, y: 20 },
+      { x: 23, y: 21 }, { x: 24, y: 21 }, { x: 25, y: 21 }, { x: 26, y: 21 }, { x: 27, y: 21 },
+      { x: 22, y: 22 }, { x: 23, y: 22 }, { x: 24, y: 22 }, { x: 25, y: 22 }, { x: 26, y: 22 }, { x: 27, y: 22 },
+      { x: 22, y: 23 }, { x: 23, y: 23 }, { x: 24, y: 23 }, { x: 25, y: 23 }, { x: 26, y: 23 }, { x: 27, y: 23 },
+      { x: 22, y: 24 }, { x: 23, y: 24 }, { x: 24, y: 24 }, { x: 25, y: 24 }, { x: 26, y: 24 }, { x: 27, y: 24 },
+      { x: 23, y: 25 }, { x: 24, y: 25 }, { x: 25, y: 25 }, { x: 26, y: 25 },
+      { x: 24, y: 26 }, { x: 25, y: 26 },
     ],
   },
   {
     id: 7,
     pointValue: 3,
     name: 'dusk',
+    // Bottom "3" territory - estimated based on board layout
     cells: [
-      { x: 5, y: 4 }, { x: 5, y: 5 }, { x: 4, y: 4 }, { x: 4, y: 5 },
-      { x: 3, y: 4 }, { x: 3, y: 5 }, { x: 2, y: 4 }, { x: 2, y: 5 },
+      { x: 17, y: 26 }, { x: 18, y: 26 }, { x: 19, y: 26 },
+      { x: 16, y: 27 }, { x: 17, y: 27 }, { x: 18, y: 27 }, { x: 19, y: 27 }, { x: 20, y: 27 },
+      { x: 15, y: 28 }, { x: 16, y: 28 }, { x: 17, y: 28 }, { x: 18, y: 28 }, { x: 19, y: 28 }, { x: 20, y: 28 }, { x: 21, y: 28 },
+      { x: 15, y: 29 }, { x: 16, y: 29 }, { x: 17, y: 29 }, { x: 18, y: 29 }, { x: 19, y: 29 }, { x: 20, y: 29 }, { x: 21, y: 29 },
+      { x: 16, y: 30 }, { x: 17, y: 30 }, { x: 18, y: 30 }, { x: 19, y: 30 }, { x: 20, y: 30 },
+      { x: 17, y: 31 }, { x: 18, y: 31 }, { x: 19, y: 31 },
     ],
   },
 ]

@@ -2,8 +2,9 @@ import { useRef, useState, useEffect, useMemo } from "react";
 import { useGameState } from "../../state/gameState";
 import { socketService } from "../../services/socketService";
 import { validatePlacement, canPlaceOnCurrentTerritory } from "../../utils/gameValidation";
-import { getElementFromPieceId, Element } from "../../constants/gameRules";
+import { getElementFromPieceId, Element, getTerritoryForCell, TERRITORIES } from "../../constants/gameRules";
 import { checkGameEnd, calculateScores } from "../../utils/gameEndDetection";
+import { getPieceSrc } from "../../utils/pieceUtils";
 import UnknownSelectionModal from "../UnknownSelectionModal";
 import GameEndModal from "../GameEndModal";
 import ChaosRoundModal from "../ChaosRoundModal";
@@ -13,9 +14,10 @@ interface DragOverItem {
 }
 
 const MainBoard = () => {
+  // 32x32 grid for fine-grained territory mapping
   const matrix: number[] = useMemo(() => {
     const arr: number[] = [];
-    for (let i = 0; i < 16; i++) { arr.push(i) }
+    for (let i = 0; i < 32; i++) { arr.push(i) }
     return arr;
   }, [])
 
@@ -49,6 +51,16 @@ const MainBoard = () => {
     requiredElement?: Element | null
   } | null>(null)
 
+  // Get valid drop zone cells for the current territory
+  const validDropZones = useMemo(() => {
+    const currentTerritory = TERRITORIES[gameStatus.currentTerritoryIndex]
+    if (!currentTerritory) return new Set<string>()
+    return new Set(currentTerritory.cells.map(cell => `${cell.x},${cell.y}`))
+  }, [gameStatus.currentTerritoryIndex])
+
+  // Check if a cell is a valid drop zone
+  const isValidDropZone = (x: number, y: number) => validDropZones.has(`${x},${y}`)
+
   const dragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.stopPropagation()
     e.preventDefault()
@@ -79,35 +91,43 @@ const MainBoard = () => {
   }
 
   // Check if a piece belongs to a specific player
-  const isPlayersPiece = (pieceId: string, playerNumber: number): boolean => {
-    if (playerNumber === 1) {
-      return playerOneInventory.includes(pieceId);
-    } else {
-      return playerTwoInventory.includes(pieceId);
-    }
+  const isPlayersPiece = (pieceId: string, checkPlayer: number): boolean => {
+    const inventory = checkPlayer === 1 ? playerOneInventory : playerTwoInventory
+    const found = inventory.includes(pieceId)
+    console.log('[MainBoard] isPlayersPiece check:', {
+      pieceId,
+      checkPlayer,
+      inventoryLength: inventory.length,
+      found,
+      inventorySample: inventory.slice(0, 3) // Show first 3 pieces for debugging
+    })
+    return found
   }
 
   const handlePlacement = (pieceId: string, position: { x: number; y: number }, resolvedElement?: string) => {
-    const pieceSrc = pieceId.split('-')[0]
+    console.log('[MainBoard] handlePlacement called:', {
+      pieceId,
+      pieceSrc: getPieceSrc(pieceId),
+      position,
+      resolvedElement,
+      currentPlayer,
+      roomId,
+      isConnected: socketService.isConnected()
+    })
     
     try {
       // If connected to a room, emit to server (multiplayer mode)
       if (roomId && socketService.isConnected()) {
+        console.log('[MainBoard] Emitting piece placed to server')
         socketService.emitPiecePlaced(pieceId, position, currentPlayer, resolvedElement)
       } else {
         // Local mode - update state directly
+        console.log('[MainBoard] Local mode - calling placePiece')
         placePiece(pieceId, position, currentPlayer, resolvedElement)
       }
       
-      // Create the piece element
-      const target = document.getElementById(`${position.x},${position.y}`)
-      if (target && target.isConnected) {
-        const droppedPiece = document.createElement("img")
-        droppedPiece.src = pieceSrc
-        droppedPiece.className = "h-[180%] w-auto object-contain drop-shadow-xl transform -translate-y-[20%]"
-        target.innerHTML = ''
-        target.appendChild(droppedPiece)
-      }
+      // Pieces are rendered declaratively in the JSX based on boardState
+      // No DOM manipulation needed here - React will handle the re-render
       
       // Note: Territory advancement should be handled by game rules
       // A territory is "complete" when a piece is placed on it and control is determined
@@ -148,31 +168,78 @@ const MainBoard = () => {
 
     const target = e.currentTarget
     target.style.backgroundColor = "rgba(0,0,0,0)"
-    
+
     const draggedPieceId = e.dataTransfer.getData("text/plain")
-    if (!draggedPieceId) return
+    
+    console.log('[MainBoard] Drop event:', {
+      draggedPieceId,
+      playerNumber,
+      currentPlayer,
+      isPlayersTurn: playerNumber === currentPlayer,
+      roomId,
+      p1Inventory: playerOneInventory.length,
+      p2Inventory: playerTwoInventory.length
+    })
+    
+    if (!draggedPieceId) {
+      console.log('[MainBoard] No piece ID in drag data')
+      return
+    }
+
+    // Check if playerNumber is set (multiplayer mode)
+    if (roomId && playerNumber === null) {
+      console.log('[MainBoard] Player number not set yet')
+      showNotice(true, "Waiting for player assignment...")
+      return
+    }
 
     // Check if it's the current player's turn
-    if (playerNumber !== currentPlayer) {
-      showNotice(true, "Not your turn")
+    if (playerNumber !== null && playerNumber !== currentPlayer) {
+      console.log('[MainBoard] Not your turn:', { playerNumber, currentPlayer })
+      showNotice(true, `Not your turn - waiting for Player ${currentPlayer}`)
       return
     }
 
     // Check if it's the current player's piece
     const currentPlayerInventory = currentPlayer === 1 ? playerOneInventory : playerTwoInventory
+    console.log('[MainBoard] Checking piece ownership:', {
+      draggedPieceId,
+      currentPlayer,
+      inventorySize: currentPlayerInventory.length,
+      isPlayersPiece: isPlayersPiece(draggedPieceId, currentPlayer)
+    })
+    
     if (!isPlayersPiece(draggedPieceId, currentPlayer)) {
-      showNotice(true, "Not your piece")
+      console.log('[MainBoard] Not your piece')
+      showNotice(true, `Not your piece - you are Player ${playerNumber}`)
       return
     }
 
     // Parse position from target ID (format: "x,y")
     const [x, y] = target.id.split(',').map(Number)
+    console.log('[MainBoard] Parsed drop position:', { targetId: target.id, x, y })
+    
     if (isNaN(x) || isNaN(y)) {
-      console.error('Invalid position:', target.id)
+      console.error('[MainBoard] Invalid position:', target.id)
       return
     }
+    
+    // Debug: Show which territory this cell belongs to
+    const territoryForCell = getTerritoryForCell(x, y)
+    console.log('[MainBoard] Territory for cell:', { 
+      x, y, 
+      territory: territoryForCell ? { id: territoryForCell.id, name: territoryForCell.name } : null,
+      currentTerritoryIndex: gameStatus.currentTerritoryIndex
+    })
 
     // Validate placement using game rules
+    console.log('[MainBoard] Validating placement:', {
+      pieceId: draggedPieceId,
+      position: { x, y },
+      currentPlayer,
+      currentTerritoryIndex: gameStatus.currentTerritoryIndex
+    })
+    
     const validation = validatePlacement(
       draggedPieceId,
       { x, y },
@@ -183,7 +250,10 @@ const MainBoard = () => {
       currentPlayerInventory
     )
 
+    console.log('[MainBoard] Validation result:', validation)
+
     if (!validation.valid) {
+      console.log('[MainBoard] Placement invalid:', validation.reason)
       showNotice(true, validation.reason || "Invalid placement")
       return
     }
@@ -317,39 +387,12 @@ const MainBoard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInitialized, currentPlayer, playerOneInventory, playerTwoInventory, boardState, territoryControl, gameStatus.gameEnded, gameStatus.currentTerritoryIndex])
 
-  // Sync board state from server/local state
-  useEffect(() => {
-    // Clear all cells first
-    matrix.forEach((row) => {
-      matrix.forEach((col) => {
-        const cell = document.getElementById(`${col},${row}`)
-        if (cell) {
-          cell.innerHTML = ''
-        }
-      })
-    })
-
-    // Render pieces from boardState
-    boardState.forEach((position, key) => {
-      const cell = document.getElementById(key)
-      if (cell && position.pieceId) {
-        const pieceSrc = position.pieceId.split('-')[0]
-        const pieceImg = document.createElement("img")
-        pieceImg.src = pieceSrc
-        pieceImg.className = "h-[180%] w-auto object-contain drop-shadow-xl transform -translate-y-[20%]"
-        cell.appendChild(pieceImg)
-      }
-    })
-
-    // Render control coins
-    territoryControl.forEach((control, _territoryId) => {
-      if (control.controlCoin) {
-        // For now, we'll render coins as part of territory control UI
-        // This will be enhanced with visual indicators
-        // TODO: Add visual indicators for control coins
-      }
-    })
-  }, [boardState, territoryControl, matrix])
+  // Helper to get piece at a given cell position
+  const getPieceAtCell = (col: number, row: number): string | null => {
+    const key = `${col},${row}`
+    const position = boardState.get(key)
+    return position?.pieceId || null
+  }
 
   useEffect(() => {
     return () => {
@@ -449,38 +492,64 @@ const MainBoard = () => {
           </div>
         )}
         
-        <div className="w-full board-matrix rounded-xl overflow-hidden relative z-20 shadow-[0_0_15px_5px_rgba(0,0,0,0.3)] transform rotate-[0.5deg]">
+        <div className="w-full board-matrix rounded-xl overflow-visible relative z-20 shadow-[0_0_15px_5px_rgba(0,0,0,0.3)] aspect-square">
           <div className="absolute inset-0 bg-gradient-to-br from-amber-50/5 to-amber-950/10 pointer-events-none" />
-          {matrix.map((row) => (
-            <div key={row} className="flex h-[25px] md:h-[35px] w-auto matrix-row">
-              {matrix.map((matrixDiv) => (
-                <div 
-                  key={`${matrixDiv},${row}`}
-                  className="w-full h-auto flex items-center justify-center hover:bg-white/10 transition-colors duration-200" 
-                  style={{ minHeight: '25px' }}
-                  id={`${matrixDiv},${row}`} 
-                  onDragOver={dragOver} 
-                  onDragLeave={dragLeave} 
-                  onDrop={drop}
-                />
-              ))}
-            </div>
-          ))}
+          <div 
+            className="absolute inset-0 grid overflow-visible"
+            style={{ gridTemplateColumns: 'repeat(32, 1fr)', gridTemplateRows: 'repeat(32, 1fr)' }}
+          >
+            {matrix.map((row) => (
+              matrix.map((col) => {
+                const isDropZone = isValidDropZone(col, row)
+                const isMyTurn = playerNumber === currentPlayer || !roomId
+                const pieceId = getPieceAtCell(col, row)
+                const pieceSrc = pieceId ? getPieceSrc(pieceId) : null
+                
+                return (
+                  <div 
+                    key={`${col},${row}`}
+                    className={`flex items-center justify-center transition-colors duration-100 border border-white/10 relative overflow-visible
+                      ${isDropZone && isMyTurn 
+                        ? 'bg-green-500/40 border-green-400 hover:bg-green-400/60 cursor-pointer' 
+                        : isDropZone 
+                          ? 'bg-yellow-500/30 border-yellow-400/50'
+                          : 'hover:bg-white/30'
+                      }`}
+                    id={`${col},${row}`} 
+                    onClick={() => console.log(`[GRID CLICK] Cell: (${col}, ${row})`)}
+                    onDragOver={dragOver} 
+                    onDragLeave={dragLeave} 
+                    onDrop={drop}
+                  >
+                    {pieceSrc && (
+                      <img 
+                        src={pieceSrc}
+                        alt="piece"
+                        className="absolute z-30 pointer-events-none drop-shadow-lg"
+                        style={{
+                          width: '80px',
+                          height: '100px',
+                          maxWidth: 'none',
+                          maxHeight: 'none',
+                          top: '50%',
+                          left: '50%',
+                          transform: 'translate(-50%, -50%)',
+                          objectFit: 'contain'
+                        }}
+                      />
+                    )}
+                  </div>
+                )
+              })
+            ))}
+          </div>
         </div>
-        <div 
-          className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 text-center text-base py-2 px-6 rounded transition-all duration-500 z-50 
-            ${showTurnNotice ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}
-            ${isInvalidMove 
-              ? 'bg-red-500/90 text-white' 
-              : 'bg-gray-200/90'
-            }`}
-        >
-          {isInvalidMove 
-            ? `Invalid move - It's Player ${currentPlayer}'s turn` 
-            : playerNumber 
-              ? `Player ${currentPlayer}'s turn${playerNumber === currentPlayer ? ' (Your turn!)' : ''}`
-              : `Player ${currentPlayer}'s turn`}
-        </div>
+        {/* Turn notice - only show briefly for invalid moves */}
+        {isInvalidMove && showTurnNotice && (
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500/90 text-white text-base py-2 px-6 rounded z-50">
+            Invalid move - It's Player {currentPlayer}'s turn
+          </div>
+        )}
       </div>
     </div>
   );

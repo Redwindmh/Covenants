@@ -2,6 +2,7 @@ import { useRef, useEffect, useCallback } from "react"
 import { gamePieces } from "../../constants/gamePieces"
 import { useGameState } from "../../state/gameState"
 import { socketService } from "../../services/socketService"
+import { getPieceSrc } from "../../utils/pieceUtils"
 
 interface Piece {
   id: string;
@@ -10,7 +11,8 @@ interface Piece {
 
 const ReadyPlayerOne = () => {
   const dragItem = useRef<string>("")
-  const { playerOneInventory, initializeGame, resetGame, isInitialized, roomId, playerNumber } = useGameState()
+  const hasSyncedToServer = useRef(false)
+  const { playerOneInventory, playerTwoInventory, initializeGame, resetGame, isInitialized, roomId, playerNumber, gameStatus } = useGameState()
 
   const generatePieces = useCallback(() => {
     // Base rules: 21 tiles total = 4 of each element + 1 UNKNOWN
@@ -86,10 +88,16 @@ const ReadyPlayerOne = () => {
       return
     }
     
+    // If roomId is set but playerNumber isn't assigned yet, we're in the middle of joining
+    // Wait for the join to complete before deciding whether to generate pieces
+    if (roomId && playerNumber === null) {
+      console.log('[ReadyPlayerOne] Waiting for room join to complete (roomId set, playerNumber pending)')
+      return
+    }
+    
     // Generate pieces if:
     // - Single player (no roomId)
     // - Or Player 1 in multiplayer room
-    // - Or playerNumber not yet assigned (will sync later)
     console.log('[ReadyPlayerOne] Generating pieces...')
     generatePieces()
     console.log('[ReadyPlayerOne] Pieces generated!')
@@ -106,29 +114,94 @@ const ReadyPlayerOne = () => {
     }
   }, [isInitialized, resetGame, generatePieces, playerNumber, roomId])
 
+  // Separate effect: Sync game state to server when roomId becomes available
+  // This handles the case where Player 1 generates pieces BEFORE creating a room
+  useEffect(() => {
+    console.log('[ReadyPlayerOne] Sync effect:', { 
+      roomId, 
+      playerNumber, 
+      isInitialized, 
+      hasSynced: hasSyncedToServer.current,
+      p1Inv: playerOneInventory.length,
+      p2Inv: playerTwoInventory.length
+    })
+    
+    // Only sync if:
+    // - We have a roomId
+    // - We're Player 1 (the one who should sync game state)
+    // - Game is initialized with pieces
+    // - We haven't already synced
+    // - Socket is connected
+    if (
+      roomId && 
+      playerNumber === 1 && 
+      isInitialized && 
+      !hasSyncedToServer.current &&
+      playerOneInventory.length > 0 &&
+      playerTwoInventory.length > 0 &&
+      socketService.isConnected()
+    ) {
+      console.log('[ReadyPlayerOne] Syncing game state to server!')
+      socketService.emitGameInitialized(
+        playerOneInventory, 
+        playerTwoInventory, 
+        gameStatus.leftoverTiles
+      )
+      hasSyncedToServer.current = true
+    }
+    
+    // Reset sync flag when leaving room
+    if (!roomId) {
+      hasSyncedToServer.current = false
+    }
+  }, [roomId, playerNumber, isInitialized, playerOneInventory, playerTwoInventory, gameStatus.leftoverTiles])
+
   const dragStart = (e: React.DragEvent<HTMLImageElement>) => {
     dragItem.current = e.currentTarget.id
     e.dataTransfer.setData("text/plain", e.currentTarget.id)
   }
 
+  // In multiplayer, only show pieces if this is your hand (Player 1)
+  // In single player (no roomId), show all pieces
+  const isMyHand = !roomId || playerNumber === 1
+  const isOpponentHand = roomId && playerNumber === 2
+
+  // If this is opponent's hand in multiplayer, show hidden card backs
+  if (isOpponentHand) {
+    return (
+      <div className="w-full mb-4 md:mb-0 md:h-screen">
+        <h2 className="text-amber-100 text-center mb-2 font-serif text-2xl">Opponent</h2>
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 justify-items-center items-center bg-amber-950/60 p-2 rounded-lg md:h-[calc(100vh-4rem)]">
+          {playerOneInventory.map((_pieceId: string, index: number) => (
+            <div
+              key={`hidden-${index}`}
+              className="h-16 w-12 md:h-20 md:w-14 lg:h-24 lg:w-16 bg-amber-900/80 rounded-lg border-2 border-amber-700 flex items-center justify-center"
+            >
+              <span className="text-amber-600 text-2xl">?</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="w-full mb-4 md:mb-0 md:h-screen">
-      <h2 className="text-amber-100 text-center mb-2 font-serif text-2xl">Player One</h2>
+      <h2 className="text-amber-100 text-center mb-2 font-serif text-2xl">
+        {isMyHand && roomId ? 'Your Hand' : 'Player One'}
+      </h2>
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 justify-items-center items-center bg-amber-950/60 p-2 rounded-lg md:h-[calc(100vh-4rem)]">
-        {playerOneInventory.map((pieceId: string) => {
-          const pieceSrc = pieceId.split('-')[0]
-          return (
-            <img
-              key={pieceId}
-              className="h-16 w-auto md:h-20 lg:h-24 object-contain drop-shadow-md"
-              id={pieceId}
-              draggable
-              src={pieceSrc}
-              alt="pieces"
-              onDragStart={dragStart}
-            />
-          )
-        })}
+        {playerOneInventory.map((pieceId: string) => (
+          <img
+            key={pieceId}
+            className="h-16 w-auto md:h-20 lg:h-24 object-contain drop-shadow-md"
+            id={pieceId}
+            draggable={isMyHand}
+            src={getPieceSrc(pieceId)}
+            alt="pieces"
+            onDragStart={isMyHand ? dragStart : undefined}
+          />
+        ))}
       </div>
     </div>
   )

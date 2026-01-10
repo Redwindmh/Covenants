@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { getPieceSrc } from '../utils/pieceUtils'
 
 interface ChaosRoundModalProps {
   isOpen: boolean
@@ -51,7 +52,7 @@ const ChaosRoundModal = ({ isOpen, leftoverTiles, onDraw, onCancel }: ChaosRound
           <div className="text-center">
             <div className="mb-4">
               <img 
-                src={drawnTile.split('-')[0]} 
+                src={getPieceSrc(drawnTile)} 
                 alt="Drawn tile"
                 className="w-24 h-24 mx-auto object-contain"
               />
