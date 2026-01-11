@@ -13,9 +13,22 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const server = http.createServer(app);
+// CORS origins - add your production domain here
+const corsOrigins = [
+  "http://localhost:5173",      // Vite dev server
+  "http://localhost:3001",      // Local backend
+  "https://covenants.hendricks-technomancy.com",  // Production domain
+  "http://covenants.hendricks-technomancy.com",   // Production domain (non-https fallback)
+];
+
+// Allow CORS_ORIGIN env var to override/add origins
+if (process.env.CORS_ORIGIN) {
+  corsOrigins.push(process.env.CORS_ORIGIN);
+}
+
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173", "http://localhost:3001"], // Vite dev server and production
+    origin: corsOrigins,
     methods: ["GET", "POST"],
   },
 });

@@ -1,11 +1,32 @@
 import { io, Socket } from 'socket.io-client'
 
+// Determine the server URL based on environment
+// Priority:
+// 1. VITE_SOCKET_URL environment variable (for explicit configuration)
+// 2. In production: use the current origin (same domain)
+// 3. In development: use localhost:3001
+const getServerUrl = (): string => {
+  // Check for explicit environment variable first
+  if (import.meta.env.VITE_SOCKET_URL) {
+    return import.meta.env.VITE_SOCKET_URL
+  }
+  
+  if (import.meta.env.PROD) {
+    // Production: connect to the same origin
+    // This works for both HTTP and HTTPS (socket.io handles ws/wss automatically)
+    return window.location.origin
+  }
+  
+  // Development: use localhost
+  return 'http://localhost:3001'
+}
+
 class SocketService {
   private socket: Socket | null = null
   private roomId: string | null = null
   private playerId: string | null = null
 
-  connect(serverUrl: string = 'http://localhost:3001'): Socket {
+  connect(serverUrl: string = getServerUrl()): Socket {
     console.log('[socketService] connect() called, serverUrl:', serverUrl)
     
     // Return existing socket if already connected or connecting
