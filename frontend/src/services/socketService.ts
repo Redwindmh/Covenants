@@ -41,12 +41,24 @@ class SocketService {
     }
 
     console.log('[socketService] Creating new socket connection...')
+    
+    // In production, start with polling only (more reliable through Cloudflare/proxies)
+    // In development, use websocket for better performance
+    const transports = import.meta.env.PROD 
+      ? ['polling']  // Production: polling only (Cloudflare compatible)
+      : ['websocket', 'polling']  // Dev: websocket preferred
+    
+    console.log('[socketService] Using transports:', transports)
+    
     this.socket = io(serverUrl, {
-      transports: ['websocket', 'polling'],
+      transports,
       reconnection: true,
       reconnectionDelay: 1000,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: 10,
+      timeout: 20000,
       autoConnect: true,
+      // Needed for cross-origin requests
+      withCredentials: false,
     })
 
     this.socket.on('connect', () => {

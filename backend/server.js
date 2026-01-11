@@ -31,6 +31,11 @@ const io = new Server(server, {
     origin: corsOrigins,
     methods: ["GET", "POST"],
   },
+  // Allow both polling and websocket
+  transports: ['polling', 'websocket'],
+  // Increase timeouts for slower connections
+  pingTimeout: 60000,
+  pingInterval: 25000,
 });
 
 // Serve static files from the frontend build
