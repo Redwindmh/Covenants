@@ -45,9 +45,12 @@ app.use(express.static(frontendDistPath));
 // API routes should go here (if any)
 
 // Catch-all route for React Router (SPA)
-// This should be AFTER all API routes but BEFORE socket.io setup
-// Note: Express 5.x requires named wildcard parameters
-app.get("/{*splat}", (req, res) => {
+// IMPORTANT: Exclude /socket.io/ from this catch-all so socket.io can handle it
+app.get("/{*splat}", (req, res, next) => {
+  // Let socket.io handle its own requests
+  if (req.path.startsWith('/socket.io')) {
+    return next();
+  }
   res.sendFile(path.join(frontendDistPath, "index.html"));
 });
 
