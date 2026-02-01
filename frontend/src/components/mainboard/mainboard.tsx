@@ -37,8 +37,11 @@ const MainBoard = () => {
     addTileToInventory,
     resetGame,
     isInitialized,
-    roomId
+    roomId,
+    gameMode
   } = useGameState()
+  
+  const isLocalMode = gameMode === 'local'
   
   const [showTurnNotice, setShowTurnNotice] = useState(true)
   const [isInvalidMove, setIsInvalidMove] = useState(false)
@@ -186,18 +189,21 @@ const MainBoard = () => {
       return
     }
 
-    // Check if playerNumber is set (multiplayer mode)
-    if (roomId && playerNumber === null) {
-      console.log('[MainBoard] Player number not set yet')
-      showNotice(true, "Waiting for player assignment...")
-      return
-    }
+    // In local mode, skip playerNumber checks - we validate by piece ownership
+    if (!isLocalMode) {
+      // Check if playerNumber is set (multiplayer mode)
+      if (roomId && playerNumber === null) {
+        console.log('[MainBoard] Player number not set yet')
+        showNotice(true, "Waiting for player assignment...")
+        return
+      }
 
-    // Check if it's the current player's turn
-    if (playerNumber !== null && playerNumber !== currentPlayer) {
-      console.log('[MainBoard] Not your turn:', { playerNumber, currentPlayer })
-      showNotice(true, `Not your turn - waiting for Player ${currentPlayer}`)
-      return
+      // Check if it's the current player's turn
+      if (playerNumber !== null && playerNumber !== currentPlayer) {
+        console.log('[MainBoard] Not your turn:', { playerNumber, currentPlayer })
+        showNotice(true, `Not your turn - waiting for Player ${currentPlayer}`)
+        return
+      }
     }
 
     // Check if it's the current player's piece
@@ -211,7 +217,9 @@ const MainBoard = () => {
     
     if (!isPlayersPiece(draggedPieceId, currentPlayer)) {
       console.log('[MainBoard] Not your piece')
-      showNotice(true, `Not your piece - you are Player ${playerNumber}`)
+      showNotice(true, isLocalMode 
+        ? `Not Player ${currentPlayer}'s piece` 
+        : `Not your piece - you are Player ${playerNumber}`)
       return
     }
 
@@ -304,11 +312,14 @@ const MainBoard = () => {
   // Check if chaos round should be active
   const shouldShowChaosModal = useMemo(() => {
     const currentPlayerInventory = currentPlayer === 1 ? playerOneInventory : playerTwoInventory
+    // In local mode, always show when conditions are met (no playerNumber check)
+    // In network mode, only show for the current player's client
+    const isCurrentPlayersTurn = isLocalMode || playerNumber === currentPlayer
     return currentPlayerInventory.length === 0 && 
            gameStatus.leftoverTiles.length > 0 && 
            !gameStatus.chaosRoundActive && 
-           playerNumber === currentPlayer
-  }, [currentPlayer, playerOneInventory, playerTwoInventory, gameStatus.leftoverTiles, gameStatus.chaosRoundActive, playerNumber])
+           isCurrentPlayersTurn
+  }, [currentPlayer, playerOneInventory, playerTwoInventory, gameStatus.leftoverTiles, gameStatus.chaosRoundActive, playerNumber, isLocalMode])
 
   // Sync showChaosModal with derived game state
   // This is intentional: we need to show the modal when game conditions are met
@@ -469,6 +480,15 @@ const MainBoard = () => {
           Covenants
         </h1>
         
+        {/* Turn indicator for local mode */}
+        {isLocalMode && (
+          <div className="text-center mb-4 py-3 bg-amber-800/80 rounded-lg mx-4">
+            <span className={`text-xl font-semibold ${currentPlayer === 1 ? 'text-green-400' : 'text-blue-400'}`}>
+              Player {currentPlayer}'s Turn
+            </span>
+          </div>
+        )}
+        
         <div className="flex justify-between items-center mb-4 px-4">
           <div className="text-amber-200 text-sm">
             {currentTerritory && (
@@ -481,7 +501,7 @@ const MainBoard = () => {
           </div>
         </div>
         
-        {playerNumber === currentPlayer && !canPlace && (
+        {(isLocalMode || playerNumber === currentPlayer) && !canPlace && (
           <div className="text-center mb-2">
             <button
               onClick={handleForfeitTerritory}
@@ -501,7 +521,8 @@ const MainBoard = () => {
             {matrix.map((row) => (
               matrix.map((col) => {
                 const isDropZone = isValidDropZone(col, row)
-                const isMyTurn = playerNumber === currentPlayer || !roomId
+                // In local mode, always allow drops on your turn; in network mode, check playerNumber
+                const isMyTurn = isLocalMode || playerNumber === currentPlayer || (!roomId && !gameMode)
                 const pieceId = getPieceAtCell(col, row)
                 const pieceSrc = pieceId ? getPieceSrc(pieceId) : null
                 

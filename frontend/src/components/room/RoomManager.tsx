@@ -4,7 +4,7 @@ import { useGameState } from '../../state/gameState'
 
 const RoomManager = () => {
   const { createRoom, joinRoom, leaveRoom, roomId, playerNumber, isConnected } = useSocket()
-  const { resetGame, opponentJoined } = useGameState()
+  const { resetGame, opponentJoined, gameMode, setGameMode } = useGameState()
   const [joinRoomId, setJoinRoomId] = useState('')
   const [showJoinForm, setShowJoinForm] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -12,7 +12,12 @@ const RoomManager = () => {
   // Both players are ready when opponent has joined
   const bothPlayersReady = roomId && opponentJoined
 
-  console.log('[RoomManager] Render:', { roomId, playerNumber, isConnected, opponentJoined, bothPlayersReady })
+  console.log('[RoomManager] Render:', { roomId, playerNumber, isConnected, opponentJoined, bothPlayersReady, gameMode })
+
+  // Only render in network mode
+  if (gameMode !== 'network') {
+    return null
+  }
 
   const handleCreateRoom = () => {
     setError(null)
@@ -43,6 +48,13 @@ const RoomManager = () => {
   const handleLeaveRoom = () => {
     console.log('[RoomManager] Leaving room...')
     leaveRoom()
+    // Reset to mode selection
+    setGameMode(null)
+  }
+
+  const handleBackToMenu = () => {
+    console.log('[RoomManager] Going back to menu...')
+    resetGame()
   }
 
   const copyRoomId = () => {
@@ -106,7 +118,7 @@ const RoomManager = () => {
   return (
     <div className="fixed top-4 right-4 bg-amber-950/90 text-amber-100 p-4 rounded-lg shadow-lg z-50 min-w-[250px]">
       <div className="text-sm mb-3">
-        <div className="font-semibold mb-2">Multiplayer</div>
+        <div className="font-semibold mb-2">Network Play</div>
         {!isConnected && (
           <div className="text-red-400 text-xs mb-2">Connecting to server...</div>
         )}
@@ -127,6 +139,12 @@ const RoomManager = () => {
             className="bg-amber-800 hover:bg-amber-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded transition-colors"
           >
             Join Room
+          </button>
+          <button
+            onClick={handleBackToMenu}
+            className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded transition-colors text-sm mt-2"
+          >
+            Back to Menu
           </button>
         </div>
       ) : (

@@ -30,6 +30,8 @@ export interface GameStatus {
   leftoverTiles: string[]
 }
 
+export type GameMode = 'local' | 'network' | null
+
 interface GameState {
   playerOneInventory: string[]
   playerTwoInventory: string[]
@@ -40,6 +42,7 @@ interface GameState {
   roomId: string | null
   gameStatus: GameStatus
   opponentJoined: boolean // True when both players are in the room
+  gameMode: GameMode // null = menu, 'local' = same screen, 'network' = multiplayer
   removeFromInventory: (player: 1 | 2, piece: string) => void
   placePiece: (pieceId: string, position: { x: number; y: number }, player: 1 | 2, resolvedElement?: string) => void
   forfeitTerritory: (territoryId: number, forfeitingPlayer: 1 | 2) => void
@@ -58,6 +61,7 @@ interface GameState {
   setGameStatus: (status: Partial<GameStatus>) => void
   addTileToInventory: (player: 1 | 2, tileId: string) => void
   setOpponentJoined: (joined: boolean) => void
+  setGameMode: (mode: GameMode) => void
   resetGame: () => void
   isInitialized: boolean
 }
@@ -83,6 +87,7 @@ export const useGameState = create<GameState>((set) => ({
   gameStatus: initialGameStatus,
   isInitialized: false,
   opponentJoined: false,
+  gameMode: null,
   
   removeFromInventory: (player: 1 | 2, piece: string) => 
     set((state) => ({
@@ -262,6 +267,8 @@ export const useGameState = create<GameState>((set) => ({
   
   setOpponentJoined: (joined: boolean) => set(() => ({ opponentJoined: joined })),
   
+  setGameMode: (mode: GameMode) => set(() => ({ gameMode: mode })),
+  
   resetGame: () => set(() => ({
     playerOneInventory: [],
     playerTwoInventory: [],
@@ -273,5 +280,6 @@ export const useGameState = create<GameState>((set) => ({
     gameStatus: initialGameStatus,
     isInitialized: false,
     opponentJoined: false,
+    gameMode: null,
   })),
 }))
